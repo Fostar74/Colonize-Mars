@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: colonize-mars
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npx serve -s build
+    nodeVersion: 18
+    autoDeploy: true
+    branch: main
+    rootDir: .
