@@ -16,7 +16,7 @@ function LoginRegister() {
 
     const payload = isRegister
       ? { email, username, password }
-      : { email, password };
+      : { username, password }; // LOGIN USES USERNAME NOW
 
     try {
       const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -35,7 +35,7 @@ function LoginRegister() {
           setMessage("✅ Login successful! Redirecting...");
           localStorage.setItem("username", data.username || username);
           setTimeout(() => {
-            window.location.href = "/game"; // Redirect after login only
+            window.location.href = "/game";
           }, 1500);
         }
       } else {
@@ -75,20 +75,38 @@ function LoginRegister() {
           borderRadius: "10px",
         }}
       >
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          required
-          onChange={(e) => setEmail(e.target.value)}
-          style={{
-            padding: "10px",
-            marginBottom: "10px",
-            borderRadius: "5px",
-            border: "none",
-          }}
-        />
         {isRegister && (
+          <>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              required
+              onChange={(e) => setEmail(e.target.value)}
+              style={{
+                padding: "10px",
+                marginBottom: "10px",
+                borderRadius: "5px",
+                border: "none",
+              }}
+            />
+            <input
+              type="text"
+              placeholder="Username"
+              value={username}
+              required
+              onChange={(e) => setUsername(e.target.value)}
+              style={{
+                padding: "10px",
+                marginBottom: "10px",
+                borderRadius: "5px",
+                border: "none",
+              }}
+            />
+          </>
+        )}
+
+        {!isRegister && (
           <input
             type="text"
             placeholder="Username"
@@ -103,6 +121,7 @@ function LoginRegister() {
             }}
           />
         )}
+
         <input
           type="password"
           placeholder="Password"
