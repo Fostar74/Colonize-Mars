@@ -22,9 +22,8 @@ function LoginRegister() {
       const data = await response.json();
       if (data.success) {
         setMessage("✅ Success! Redirecting to game...");
-        // Simulate redirect
         setTimeout(() => {
-          window.location.href = "/game"; // Change this later to your actual game
+          window.location.href = "/game"; // TODO: Replace with actual game route if different
         }, 1500);
       } else {
         setMessage(data.error || "❌ Something went wrong");
@@ -47,17 +46,34 @@ function LoginRegister() {
         flexDirection: "column",
         color: "white",
         textShadow: "0 0 5px #000",
+        padding: "20px",
+        boxSizing: "border-box",
       }}
     >
       <h1>{isRegister ? "Create Account" : "Log In"}</h1>
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", width: "300px" }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "300px",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          padding: "20px",
+          borderRadius: "10px",
+        }}
+      >
         <input
           type="email"
           placeholder="Email"
           value={email}
           required
           onChange={(e) => setEmail(e.target.value)}
-          style={{ padding: "10px", marginBottom: "10px" }}
+          style={{
+            padding: "10px",
+            marginBottom: "10px",
+            borderRadius: "5px",
+            border: "none",
+          }}
         />
         <input
           type="password"
@@ -65,16 +81,43 @@ function LoginRegister() {
           value={password}
           required
           onChange={(e) => setPassword(e.target.value)}
-          style={{ padding: "10px", marginBottom: "10px" }}
+          style={{
+            padding: "10px",
+            marginBottom: "10px",
+            borderRadius: "5px",
+            border: "none",
+          }}
         />
-        <button type="submit" style={{ padding: "10px", marginBottom: "10px" }}>
+        <button
+          type="submit"
+          style={{
+            padding: "10px",
+            marginBottom: "10px",
+            backgroundColor: "#ff4500",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
           {isRegister ? "Register" : "Login"}
         </button>
-        <button type="button" onClick={() => setIsRegister(!isRegister)} style={{ padding: "10px" }}>
+        <button
+          type="button"
+          onClick={() => setIsRegister(!isRegister)}
+          style={{
+            padding: "10px",
+            backgroundColor: "#666",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
           {isRegister ? "Have an account? Log In" : "No account? Register"}
         </button>
       </form>
-      {message && <p>{message}</p>}
+      {message && <p style={{ marginTop: "15px" }}>{message}</p>}
     </div>
   );
 }
