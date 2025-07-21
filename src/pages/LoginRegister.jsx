@@ -6,6 +6,7 @@ const API_BASE = "https://colonize-mars-web-server.onrender.com";
 function LoginRegister() {
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
@@ -13,21 +14,26 @@ function LoginRegister() {
     e.preventDefault();
     const endpoint = isRegister ? "/register" : "/login";
 
+    const payload = isRegister
+      ? { email, username, password }
+      : { email, password };
+
     try {
       const response = await fetch(`${API_BASE}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
-      if (data.success) {
+      if (response.ok) {
         setMessage("✅ Success! Redirecting to game...");
+        localStorage.setItem("username", data.username || username);
         setTimeout(() => {
-          window.location.href = "/game"; // TODO: Replace with actual game route if different
+          window.location.href = "/game"; // Adjust if game path is different
         }, 1500);
       } else {
-        setMessage(data.error || "❌ Something went wrong");
+        setMessage(data.message || "❌ Something went wrong");
       }
     } catch (err) {
       setMessage("❌ Error connecting to server");
@@ -76,6 +82,21 @@ function LoginRegister() {
             border: "none",
           }}
         />
+        {isRegister && (
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            required
+            onChange={(e) => setUsername(e.target.value)}
+            style={{
+              padding: "10px",
+              marginBottom: "10px",
+              borderRadius: "5px",
+              border: "none",
+            }}
+          />
+        )}
         <input
           type="password"
           placeholder="Password"
@@ -105,7 +126,10 @@ function LoginRegister() {
         </button>
         <button
           type="button"
-          onClick={() => setIsRegister(!isRegister)}
+          onClick={() => {
+            setIsRegister(!isRegister);
+            setMessage("");
+          }}
           style={{
             padding: "10px",
             backgroundColor: "#666",
