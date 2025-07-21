@@ -26,12 +26,16 @@ function LoginRegister() {
       });
 
       const data = await response.json();
-      if (response.ok) {
-        setMessage("✅ Success! Redirecting to game...");
-        localStorage.setItem("username", data.username || username);
-        setTimeout(() => {
-          window.location.href = "/game"; // Adjust if game path is different
-        }, 1500);
+if (response.ok) {
+  if (isRegister) {
+    setMessage("✅ Registration successful. Please log in to continue.");
+    setIsRegister(false); // Switch to login screen
+  } else {
+    setMessage("✅ Login successful! Redirecting...");
+    localStorage.setItem("username", data.username || username);
+    setTimeout(() => {
+      window.location.href = "/game"; // Only after login
+    }, 1500);
       } else {
         setMessage(data.message || "❌ Something went wrong");
       }
