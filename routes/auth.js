@@ -1,19 +1,43 @@
 const express = require("express");
-const cors = require("cors");
-const app = express();
-const authRoutes = require("./routes/auth");
+const fs = require("fs");
+const path = require("path");
 
-const PORT = process.env.PORT || 3001;
+const router = express.Router();
+const USERS_FILE = path.join(__dirname, "../data/users.json");
 
-app.use(cors());
-app.use(express.json());
+// Load users
+function loadUsers() {
+  if (!fs.existsSync(USERS_FILE)) return [];
+  const data = fs.readFileSync(USERS_FILE);
+  return JSON.parse(data);
+}
 
-app.use("/api", authRoutes);
+// Save users
+function saveUsers(users) {
+  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+}
 
-app.get("/", (req, res) => {
-  res.send("Colonize-Mars Backend is running.");
+// Register route
+router.post("/register", (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: "Email and password required" });
+
+  const users = loadUsers();
+  if (users.find((u) => u.email === email)) return res.status(409).json({ error: "Email already exists" });
+
+  users.push({ email, password });
+  saveUsers(users);
+  res.json({ success: true });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}`);
+// Login route
+router.post("/login", (req, res) => {
+  const { email, password } = req.body;
+  const users = loadUsers();
+  const user = users.find((u) => u.email === email && u.password === password);
+
+  if (!user) return res.status(401).json({ error: "Invalid credentials" });
+  res.json({ success: true });
 });
+
+module.exports = router;
