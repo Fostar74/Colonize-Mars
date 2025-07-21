@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "./pages/LoginRegister.css";
+import "./LoginRegister.css";
 
 const API_BASE = "https://colonize-mars-web-server.onrender.com";
 
