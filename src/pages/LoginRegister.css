@@ -1,48 +1,51 @@
-.login-register-page {
-  position: relative;
-  height: 100vh;
-  width: 100%;
-  overflow: hidden;
-  font-family: Arial, sans-serif;
-  color: white;
-}
-
-.background-image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
+.login-page {
   background-image: url("/images/mars_background.jpg");
   background-size: cover;
   background-position: center;
-  filter: brightness(0.5);
-  z-index: -1;
-}
-
-.content {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  padding-top: 20vh;
-}
-
-.content h1 {
-  font-size: 3em;
-  margin-bottom: 0.5em;
-}
-
-.content p {
-  font-size: 1.2em;
-  margin-bottom: 1em;
-}
-
-.content button {
-  padding: 12px 24px;
-  font-size: 1em;
-  border: none;
-  border-radius: 8px;
-  background-color: #e63946;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
   color: white;
+  text-shadow: 0 0 5px #000;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px black;
+}
+
+.login-form input,
+.login-form button {
+  padding: 10px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 5px;
+}
+
+.login-form input {
+  background-color: #fff;
+  color: #000;
+}
+
+.login-form button {
+  background-color: #e63946;
+  color: #fff;
   cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.login-form button:hover {
+  background-color: #d62828;
+}
+
+.login-message {
+  margin-top: 10px;
+  font-weight: bold;
 }
