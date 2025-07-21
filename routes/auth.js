@@ -71,4 +71,7 @@ router.post('/login', async (req, res) => {
     return res.status(401).json({ message: 'Invalid email or password.' });
   }
 
-  res.status(200).js
+  res.status(200).json({ message: 'Login successful!', username: user.username });
+});
+
+module.exports = router;
