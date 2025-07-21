@@ -1,43 +1,74 @@
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
-
+const express = require('express');
 const router = express.Router();
-const USERS_FILE = path.join(__dirname, "../data/users.json");
+const fs = require('fs');
+const path = require('path');
+const bcrypt = require('bcrypt');
 
-// Load users
+const USERS_FILE = path.join(__dirname, '../data/users.json');
+
+// Helper: Load users
 function loadUsers() {
   if (!fs.existsSync(USERS_FILE)) return [];
   const data = fs.readFileSync(USERS_FILE);
   return JSON.parse(data);
 }
 
-// Save users
+// Helper: Save users
 function saveUsers(users) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
-// Register route
-router.post("/register", (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: "Email and password required" });
+// REGISTER route
+router.post('/register', async (req, res) => {
+  const { email, password, username } = req.body;
+
+  if (!email || !password || !username) {
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
 
   const users = loadUsers();
-  if (users.find((u) => u.email === email)) return res.status(409).json({ error: "Email already exists" });
 
-  users.push({ email, password });
+  // Check if email or username already exists
+  const emailExists = users.find(user => user.email === email);
+  const usernameExists = users.find(user => user.username === username);
+
+  if (emailExists) {
+    return res.status(409).json({ message: 'Email is already registered.' });
+  }
+
+  if (usernameExists) {
+    return res.status(409).json({ message: 'Username is already taken.' });
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const newUser = {
+    email,
+    username,
+    password: hashedPassword
+  };
+
+  users.push(newUser);
   saveUsers(users);
-  res.json({ success: true });
+
+  res.status(201).json({ message: 'Registration successful!' });
 });
 
-// Login route
-router.post("/login", (req, res) => {
+// LOGIN route
+router.post('/login', async (req, res) => {
   const { email, password } = req.body;
+
   const users = loadUsers();
-  const user = users.find((u) => u.email === email && u.password === password);
+  const user = users.find(u => u.email === email);
 
-  if (!user) return res.status(401).json({ error: "Invalid credentials" });
-  res.json({ success: true });
-});
+  if (!user) {
+    return res.status(401).json({ message: 'Invalid email or password.' });
+  }
 
-module.exports = router;
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+
+  if (!isPasswordValid) {
+    return res.status(401).json({ message: 'Invalid email or password.' });
+  }
+
+  res.status(200).js
