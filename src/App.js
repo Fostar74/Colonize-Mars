@@ -1,11 +1,16 @@
 import React from "react";
-import LoginRegister from "./pages/LoginRegister.jsx"; // <-- make sure the filename is exactly this
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import LoginRegister from "./LoginRegister";
+import Game from "./pages/Game"; // ✅ new file
 
 function App() {
   return (
-    <div>
-      <LoginRegister />
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<LoginRegister />} />
+        <Route path="/game" element={<Game />} /> {/* ✅ Game screen */}
+      </Routes>
+    </Router>
   );
 }
 
