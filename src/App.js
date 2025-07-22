@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Game from "./pages/Game";
-import LoginRegister from "./pages/LoginRegister";
+import LoginRegister from "./pages/LoginRegister"; // ✅ Do NOT add .jsx here
+import Game from "./pages/Game";                   // ✅ Do NOT add .jsx here
 
 function App() {
   return (
