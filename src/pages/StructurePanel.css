@@ -1,0 +1,61 @@
+.subtab-buttons {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.subtab-buttons button {
+  margin: 5px 10px;
+  padding: 10px 20px;
+  background-color: #444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.subtab-buttons button:hover {
+  background-color: #666;
+}
+.building-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  padding: 10px;
+}
+.building {
+  background-color: #111;
+  color: white;
+  border: 1px solid #888;
+  padding: 10px;
+  border-radius: 6px;
+  text-align: center;
+}
+.upgrade-btn {
+  margin-top: 10px;
+  background-color: green;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.upgrade-btn:hover {
+  background-color: darkgreen;
+}
+.progress-bar {
+  height: 12px;
+  background-color: #333;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+.progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background-color: limegreen;
+  transition: width 1s linear;
+}
+.level-info {
+  margin-top: 10px;
+  font-size: 14px;
+}
