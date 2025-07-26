@@ -8,13 +8,14 @@ function Game() {
   const [castleName, setCastleName] = useState("Headquarter");
   const [optionsVisible, setOptionsVisible] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("castle");
-    if (saved) {
-      const castle = JSON.parse(saved);
-      setCastleName(`Headquarter (${castle.x}:${castle.y})`);
-    }
-  }, []);
+useEffect(() => {
+  const saved = localStorage.getItem("castle");
+  if (saved) {
+    const castle = JSON.parse(saved);
+    setCastleName(`Headquarter (${castle.x}:${castle.y})`);
+    localStorage.setItem("castle", saved); // ✅ Add this line
+  }
+}, []);
 
   const logout = () => {
     localStorage.removeItem("token");
