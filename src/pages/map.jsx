@@ -11,14 +11,16 @@ function Map() {
   const [hqIcon, setHqIcon] = useState(null);
   const [hoveredTitle, setHoveredTitle] = useState("");
 
-  // Load icon
   useEffect(() => {
+    console.log("✅ Map component loaded");
+
     const img = new Image();
     img.src = "/images/hq-icon.png";
-    img.onload = () => setHqIcon(img);
+    img.onload = () => {
+      setHqIcon(img);
+    };
   }, []);
 
-  // Load player data
   useEffect(() => {
     const savedCastle = JSON.parse(localStorage.getItem("headquarter"));
     const username = localStorage.getItem("username");
@@ -30,18 +32,20 @@ function Map() {
     }
 
     setCastles([savedCastle]);
-    centerMapOn(savedCastle.x, savedCastle.y);
-  }, []);
 
-  // Draw map
+    // If hqIcon already loaded, center now
+    if (hqIcon) {
+      centerMapOn(savedCastle.x, savedCastle.y);
+    }
+  }, [hqIcon]);
+
   useEffect(() => {
-    if (!hqIcon) return;
+    if (!hqIcon || castles.length === 0) return;
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Grid
     for (let x = 0; x < mapSize; x++) {
       for (let y = 0; y < mapSize; y++) {
         const px = x * tileSize + offset.x;
@@ -51,7 +55,6 @@ function Map() {
       }
     }
 
-    // Castles
     castles.forEach((c) => {
       const px = c.x * tileSize + offset.x;
       const py = c.y * tileSize + offset.y;
