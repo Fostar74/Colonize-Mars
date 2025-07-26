@@ -14,32 +14,11 @@ function Game() {
       const castle = JSON.parse(saved);
       setCastleName(`Headquarter (${castle.x}:${castle.y})`);
     }
-
-    const markers = [
-      { top: 312, left: 226 }, { top: 336, left: 360 }, { top: 355, left: 480 },
-      { top: 400, left: 300 }, { top: 420, left: 390 }, { top: 458, left: 495 },
-      { top: 510, left: 250 }, { top: 530, left: 370 }, { top: 555, left: 470 },
-      { top: 600, left: 325 }, { top: 642, left: 215 }, { top: 658, left: 430 },
-      { top: 685, left: 535 }
-    ];
-
-    markers.forEach((pos, index) => {
-      const slot = document.createElement("div");
-      slot.className = "building-slot";
-      slot.style.top = pos.top + "px";
-      slot.style.left = pos.left + "px";
-      slot.onclick = () => openBuildMenu(index + 1);
-      document.body.appendChild(slot);
-    });
   }, []);
 
   const logout = () => {
     localStorage.removeItem("token");
     window.location.href = "/";
-  };
-
-  const openBuildMenu = (id) => {
-    alert(`Click on slot ${id} — build menu coming soon.`);
   };
 
   const showTab = (tabId) => {
