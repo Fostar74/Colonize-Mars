@@ -59,7 +59,7 @@ function LoginRegister() {
   return (
     <div
       style={{
-        backgroundImage: 'url("/images/mars_background.jpg")', // ✅ THIS IS CORRECT
+        backgroundImage: 'url("images/mars_background.jpg")', // ✅ THIS FIXES THE ERROR
         backgroundSize: "cover",
         backgroundPosition: "center",
         height: "100vh",
