@@ -48,16 +48,15 @@ function Game() {
 
   return (
     <div
-  className="game-container"
-  style={{
-    backgroundImage: 'url("/images/mars_background.jpg")',
-    backgroundSize: "cover",
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "center top",
-    minHeight: "100vh",
-  }}
->
-
+      className="game-container"
+      style={{
+        backgroundImage: 'url("/images/mars_background.jpg")',
+        backgroundSize: "cover",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center top",
+        minHeight: "100vh",
+      }}
+    >
       <div className="top-resource-bar">
         <div>Gold: 10000</div>
         <div>Iron: 8000</div>
@@ -75,7 +74,7 @@ function Game() {
         <button>Knights</button>
         <button>Quests</button>
         <button>Campaign</button>
-        <button onClick={() => window.location.href = "/map"}>Map</button>
+        <button onClick={() => window.location.href = "/#/map"}>Map</button>
         <button>Alliance</button>
         <button>Messages</button>
         <button>Inventory</button>
