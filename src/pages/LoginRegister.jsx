@@ -33,9 +33,19 @@ function LoginRegister() {
           setIsRegister(false);
         } else {
           setMessage("✅ Login successful! Redirecting...");
+
           localStorage.setItem("username", data.username || username);
+
+          // ✅ Save fake castle location to make /map work
+          const fakeCastle = {
+            username: data.username || username,
+            x: 100 + Math.floor(Math.random() * 50),
+            y: 100 + Math.floor(Math.random() * 50),
+          };
+          localStorage.setItem("castle", JSON.stringify(fakeCastle));
+
           setTimeout(() => {
-            window.location.href = "/#/game"; // ✅ FIXED: redirect with hash
+            window.location.href = "/#/game";
           }, 1500);
         }
       } else {
