@@ -9,54 +9,20 @@ function Map() {
   const [dragStart, setDragStart] = useState(null);
   const [castles, setCastles] = useState([]);
   const [hqIcon, setHqIcon] = useState(null);
+  const [hoveredTitle, setHoveredTitle] = useState("");
 
+  // Load icon
   useEffect(() => {
     const img = new Image();
     img.src = "/images/hq-icon.png";
     img.onload = () => setHqIcon(img);
   }, []);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-
-    function drawMap() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      for (let x = 0; x < mapSize; x++) {
-        for (let y = 0; y < mapSize; y++) {
-          const px = x * tileSize + offset.x;
-          const py = y * tileSize + offset.y;
-          ctx.strokeStyle = "#0077cc";
-          ctx.strokeRect(px, py, tileSize, tileSize);
-        }
-      }
-
-      castles.forEach((c) => {
-        const px = c.x * tileSize + offset.x;
-        const py = c.y * tileSize + offset.y;
-
-        if (
-          px + tileSize >= 0 &&
-          py + tileSize >= 0 &&
-          px < canvas.width &&
-          py < canvas.height
-        ) {
-          if (hqIcon) ctx.drawImage(hqIcon, px, py, tileSize, tileSize);
-
-          ctx.fillStyle = "white";
-          ctx.font = "12px Arial";
-          ctx.fillText(`${c.username} (${c.x}:${c.y})`, px + 2, py + tileSize - 5);
-        }
-      });
-    }
-
-    drawMap();
-  }, [offset, castles, hqIcon]);
-
+  // Load player data
   useEffect(() => {
     const savedCastle = JSON.parse(localStorage.getItem("headquarter"));
     const username = localStorage.getItem("username");
+
     if (!username || !savedCastle) {
       alert("You are not logged in. Please login first.");
       window.location.href = "/#/";
@@ -66,6 +32,43 @@ function Map() {
     setCastles([savedCastle]);
     centerMapOn(savedCastle.x, savedCastle.y);
   }, []);
+
+  // Draw map
+  useEffect(() => {
+    if (!hqIcon) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Grid
+    for (let x = 0; x < mapSize; x++) {
+      for (let y = 0; y < mapSize; y++) {
+        const px = x * tileSize + offset.x;
+        const py = y * tileSize + offset.y;
+        ctx.strokeStyle = "#0077cc";
+        ctx.strokeRect(px, py, tileSize, tileSize);
+      }
+    }
+
+    // Castles
+    castles.forEach((c) => {
+      const px = c.x * tileSize + offset.x;
+      const py = c.y * tileSize + offset.y;
+
+      if (
+        px + tileSize >= 0 &&
+        py + tileSize >= 0 &&
+        px < canvas.width &&
+        py < canvas.height
+      ) {
+        ctx.drawImage(hqIcon, px, py, tileSize, tileSize);
+        ctx.fillStyle = "white";
+        ctx.font = "12px Arial";
+        ctx.fillText(`${c.username} (${c.x}:${c.y})`, px + 2, py + tileSize - 5);
+      }
+    });
+  }, [offset, castles, hqIcon]);
 
   const centerMapOn = (x, y) => {
     const canvas = canvasRef.current;
@@ -82,21 +85,38 @@ function Map() {
   const handleMouseUp = () => setDragStart(null);
 
   const handleMouseMove = (e) => {
+    const canvas = canvasRef.current;
+
     if (dragStart) {
       setOffset({
         x: e.clientX - dragStart.x,
         y: e.clientY - dragStart.y,
       });
+      return;
     }
-  };
 
-  const searchByUsername = () => {
-    const input = document.getElementById("usernameInput").value.trim();
-    const found = castles.find(
-      (c) => c.username.toLowerCase() === input.toLowerCase()
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    let hovered = null;
+    for (const c of castles) {
+      const px = c.x * tileSize + offset.x;
+      const py = c.y * tileSize + offset.y;
+      if (
+        mouseX >= px &&
+        mouseX <= px + tileSize &&
+        mouseY >= py &&
+        mouseY <= py + tileSize
+      ) {
+        hovered = c;
+        break;
+      }
+    }
+
+    setHoveredTitle(
+      hovered ? `${hovered.username} – Headquarter (${hovered.x}:${hovered.y})` : ""
     );
-    if (found) centerMapOn(found.x, found.y);
-    else alert("Player not found.");
   };
 
   const goToCoordinates = () => {
@@ -109,10 +129,25 @@ function Map() {
     }
   };
 
+  const searchByUsername = () => {
+    const input = document.getElementById("usernameInput").value.trim();
+    const found = castles.find(
+      (c) => c.username.toLowerCase() === input.toLowerCase()
+    );
+    if (found) centerMapOn(found.x, found.y);
+    else alert("Player not found.");
+  };
+
   return (
-    <div style={{ height: "100vh", backgroundColor: "#2d2d2d", overflow: "hidden" }}>
+    <div
+      style={{
+        height: "100vh",
+        backgroundColor: "#2d2d2d",
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
       <canvas
-        id="mapCanvas"
         ref={canvasRef}
         width={1200}
         height={800}
@@ -120,6 +155,7 @@ function Map() {
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
+        title={hoveredTitle}
       />
 
       <div
