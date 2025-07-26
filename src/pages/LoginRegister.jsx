@@ -16,7 +16,7 @@ function LoginRegister() {
 
     const payload = isRegister
       ? { email, username, password }
-      : { username, password }; // LOGIN USES USERNAME NOW
+      : { username, password };
 
     try {
       const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -30,12 +30,12 @@ function LoginRegister() {
       if (response.ok) {
         if (isRegister) {
           setMessage("✅ Registration successful. Please log in to continue.");
-          setIsRegister(false); // Switch to login screen
+          setIsRegister(false);
         } else {
           setMessage("✅ Login successful! Redirecting...");
           localStorage.setItem("username", data.username || username);
           setTimeout(() => {
-            window.location.href = "/game";
+            window.location.href = "/#/game"; // ✅ FIXED: redirect with hash
           }, 1500);
         }
       } else {
