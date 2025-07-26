@@ -36,7 +36,6 @@ function LoginRegister() {
 
           localStorage.setItem("username", data.username || username);
 
-          // ✅ Load castle from server or generate fallback
           const savedCastle = data.castle || {
             username: data.username || username,
             x: 100 + Math.floor(Math.random() * 50),
@@ -60,7 +59,7 @@ function LoginRegister() {
   return (
     <div
       style={{
-        backgroundImage: 'url("images/mars_background.jpg")',
+        backgroundImage: 'url("/images/mars_background.jpg")',
         backgroundSize: "cover",
         backgroundPosition: "center",
         height: "100vh",
