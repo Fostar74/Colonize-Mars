@@ -1,107 +1,200 @@
-import React, { useEffect, useState } from "react";
-import StructurePanel from "./StructurePanel";
-import "./Game.css";
+import React, { useEffect, useRef, useState } from "react";
 
-function Game() {
-  const [showPopup, setShowPopup] = useState(false);
-  const [activeTab, setActiveTab] = useState("structures");
-  const [castleName, setCastleName] = useState("Headquarter");
-  const [optionsVisible, setOptionsVisible] = useState(false);
+function Map() {
+  const canvasRef = useRef(null);
+  const tileSize = 60;
+  const mapSize = 200;
 
-useEffect(() => {
-  const saved = localStorage.getItem("castle");
-  if (saved) {
-    const castle = JSON.parse(saved);
-    setCastleName(`Headquarter (${castle.x}:${castle.y})`);
-    localStorage.setItem("castle", saved); // ✅ Add this line
-  }
-}, []);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [dragStart, setDragStart] = useState(null);
+  const [castles, setCastles] = useState([]);
+  const [hqIcon, setHqIcon] = useState(null);
+  const [hoveredTitle, setHoveredTitle] = useState("");
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/";
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/images/hq-icon.png";
+    img.onload = () => setHqIcon(img);
+  }, []);
+
+  useEffect(() => {
+    const savedCastle = JSON.parse(localStorage.getItem("castle"));
+    const username = localStorage.getItem("username");
+
+    if (!username || !savedCastle) {
+      alert("You are not logged in. Please login first.");
+      window.location.href = "/#/";
+      return;
+    }
+
+    setCastles([savedCastle]);
+    if (hqIcon) {
+      centerMapOn(savedCastle.x, savedCastle.y);
+    }
+  }, [hqIcon]);
+
+  useEffect(() => {
+    if (!hqIcon || castles.length === 0) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let x = 0; x < mapSize; x++) {
+      for (let y = 0; y < mapSize; y++) {
+        const px = x * tileSize + offset.x;
+        const py = y * tileSize + offset.y;
+        ctx.strokeStyle = "#0077cc";
+        ctx.strokeRect(px, py, tileSize, tileSize);
+      }
+    }
+
+    castles.forEach((c) => {
+      const px = c.x * tileSize + offset.x;
+      const py = c.y * tileSize + offset.y;
+
+      if (
+        px + tileSize >= 0 &&
+        py + tileSize >= 0 &&
+        px < canvas.width &&
+        py < canvas.height
+      ) {
+        ctx.drawImage(hqIcon, px, py, tileSize, tileSize);
+        ctx.fillStyle = "white";
+        ctx.font = "12px Arial";
+        ctx.fillText(`${c.username} (${c.x}:${c.y})`, px + 2, py + tileSize - 5);
+      }
+    });
+  }, [offset, castles, hqIcon]);
+
+  const centerMapOn = (x, y) => {
+    const canvas = canvasRef.current;
+    setOffset({
+      x: canvas.width / 2 - x * tileSize,
+      y: canvas.height / 2 - y * tileSize,
+    });
   };
 
-  const showTab = (tabId) => {
-    setActiveTab(tabId);
+  const handleMouseDown = (e) => {
+    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+  };
+
+  const handleMouseUp = () => setDragStart(null);
+
+  const handleMouseMove = (e) => {
+    const canvas = canvasRef.current;
+
+    if (dragStart) {
+      setOffset({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      });
+      return;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    let hovered = null;
+    for (const c of castles) {
+      const px = c.x * tileSize + offset.x;
+      const py = c.y * tileSize + offset.y;
+      if (
+        mouseX >= px &&
+        mouseX <= px + tileSize &&
+        mouseY >= py &&
+        mouseY <= py + tileSize
+      ) {
+        hovered = c;
+        break;
+      }
+    }
+
+    setHoveredTitle(
+      hovered ? `${hovered.username} – Headquarter (${hovered.x}:${hovered.y})` : ""
+    );
+  };
+
+  const goToCoordinates = () => {
+    const x = parseInt(document.getElementById("xCoord").value);
+    const y = parseInt(document.getElementById("yCoord").value);
+    if (!isNaN(x) && !isNaN(y) && x >= 1 && x <= 200 && y >= 1 && y <= 200) {
+      centerMapOn(x, y);
+    } else {
+      alert("Invalid coordinates");
+    }
+  };
+
+  const searchByUsername = () => {
+    const input = document.getElementById("usernameInput").value.trim();
+    const found = castles.find(
+      (c) => c.username.toLowerCase() === input.toLowerCase()
+    );
+    if (found) centerMapOn(found.x, found.y);
+    else alert("Player not found.");
   };
 
   return (
     <div
-      className="game-container"
       style={{
-        backgroundImage: 'url("/images/mars_background.jpg")',
-        backgroundSize: "cover",
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center top",
-        minHeight: "100vh",
+        height: "100vh",
+        backgroundColor: "#2d2d2d",
+        overflow: "hidden",
+        position: "relative",
       }}
     >
-      <div className="top-resource-bar">
-        <div>Gold: 10000</div>
-        <div>Iron: 8000</div>
-        <div>Water: 6000</div>
-        <div>Solar: 4000</div>
+      <canvas
+        ref={canvasRef}
+        width={1200}
+        height={800}
+        style={{ display: "block", cursor: "grab", backgroundColor: "#0e3f1f" }}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        title={hoveredTitle}
+      />
+
+      <div
+        style={{
+          position: "absolute",
+          top: 20,
+          left: 20,
+          backgroundColor: "rgba(0,0,0,0.7)",
+          padding: 12,
+          borderRadius: 8,
+          color: "white",
+          zIndex: 10,
+        }}
+      >
+        <input type="text" id="usernameInput" placeholder="Search Username" />
+        <button onClick={searchByUsername}>Search</button>
+        <br />
+        <input type="number" id="xCoord" placeholder="X (1–200)" />
+        <input type="number" id="yCoord" placeholder="Y (1–200)" />
+        <button onClick={goToCoordinates}>Go to Coordinates</button>
       </div>
 
-      <div className="castle-top-bar">
-        <button className="castle-name-btn" onClick={() => setShowPopup(true)}>
-          {castleName}
-        </button>
-      </div>
-
-      <div className="bottom-bar">
-        <button>Knights</button>
-        <button>Quests</button>
-        <button>Campaign</button>
-        <button onClick={() => window.location.href = "/#/map"}>Map</button>
-        <button>Alliance</button>
-        <button>Messages</button>
-        <button>Inventory</button>
-        <button onClick={() => setOptionsVisible(!optionsVisible)}>Options</button>
-      </div>
-
-      {optionsVisible && (
-        <div id="optionsMenu">
-          <button onClick={logout}>Log Out</button>
-        </div>
-      )}
-
-      {showPopup && (
-        <div className="popup">
-          <div className="popup-header">
-            <span>BASE CONTROL PANEL</span>
-            <button className="close-button" onClick={() => setShowPopup(false)}>X</button>
-          </div>
-          <div className="popup-tabs">
-            <button onClick={() => showTab("structures")}>Structures</button>
-            <button onClick={() => showTab("units")}>Units</button>
-            <button onClick={() => showTab("upgrades")}>Upgrades</button>
-          </div>
-          <div className="popup-content">
-            {activeTab === "structures" && (
-              <div className="popup-section active">
-                <button className="back-button" onClick={() => setShowPopup(false)}>← Back</button>
-                <StructurePanel />
-              </div>
-            )}
-            {activeTab === "units" && (
-              <div className="popup-section active">
-                <button className="back-button" onClick={() => showTab("structures")}>← Back</button>
-                <div style={{ padding: 20 }}>Unit Hub — Coming Soon</div>
-              </div>
-            )}
-            {activeTab === "upgrades" && (
-              <div className="popup-section active">
-                <button className="back-button" onClick={() => showTab("structures")}>← Back</button>
-                <div style={{ padding: 20 }}>Upgrade Lab — Coming Soon</div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <button
+        onClick={() => (window.location.href = "/#/game")}
+        style={{
+          position: "absolute",
+          top: 20,
+          right: 20,
+          padding: "10px 14px",
+          backgroundColor: "#444",
+          color: "white",
+          fontWeight: "bold",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          zIndex: 10,
+        }}
+      >
+        GO BACK
+      </button>
     </div>
   );
 }
 
-export default Game;
+export default Map;
