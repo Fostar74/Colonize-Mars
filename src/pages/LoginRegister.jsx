@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./LoginRegister.css";
+import marsBackground from "../../public/images/mars_background.jpg"; // ✅ IMPORT
 
 const API_BASE = "https://colonize-mars-web-server.onrender.com";
 
@@ -59,7 +60,7 @@ function LoginRegister() {
   return (
     <div
       style={{
-        backgroundImage: 'url("/images/mars_background.jpg")', // ✅ your chosen image
+        backgroundImage: `url(${marsBackground})`, // ✅ FIXED ✅
         backgroundSize: "cover",
         backgroundPosition: "center",
         height: "100vh",
