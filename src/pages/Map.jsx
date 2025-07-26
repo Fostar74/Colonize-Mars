@@ -18,7 +18,7 @@ function Map() {
   }, []);
 
   useEffect(() => {
-    const savedCastle = JSON.parse(localStorage.getItem("headquarter"));
+    const savedCastle = JSON.parse(localStorage.getItem("castle"));
     const username = localStorage.getItem("username");
 
     if (!username || !savedCastle) {
