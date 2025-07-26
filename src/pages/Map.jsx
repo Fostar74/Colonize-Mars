@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
-function map() {
+function Map() {
   const canvasRef = useRef(null);
   const tileSize = 60;
   const mapSize = 200;
@@ -197,4 +197,4 @@ function map() {
   );
 }
 
-export default map;
+export default Map;
