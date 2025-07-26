@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
-function Map() {
+function map() {
   const canvasRef = useRef(null);
   const tileSize = 60;
   const mapSize = 200;
@@ -12,13 +12,9 @@ function Map() {
   const [hoveredTitle, setHoveredTitle] = useState("");
 
   useEffect(() => {
-    console.log("✅ Map component loaded");
-
     const img = new Image();
     img.src = "/images/hq-icon.png";
-    img.onload = () => {
-      setHqIcon(img);
-    };
+    img.onload = () => setHqIcon(img);
   }, []);
 
   useEffect(() => {
@@ -32,8 +28,6 @@ function Map() {
     }
 
     setCastles([savedCastle]);
-
-    // If hqIcon already loaded, center now
     if (hqIcon) {
       centerMapOn(savedCastle.x, savedCastle.y);
     }
@@ -203,4 +197,4 @@ function Map() {
   );
 }
 
-export default Map;
+export default map;
