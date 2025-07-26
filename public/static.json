@@ -1,5 +1,5 @@
 {
-  "redirects": [
-    { "source": "/**", "destination": "/", "status": 200 }
-  ]
+  "routes": {
+    "/**": "index.html"
+  }
 }
