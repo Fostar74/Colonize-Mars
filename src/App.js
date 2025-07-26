@@ -2,7 +2,7 @@ import React from "react";
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import LoginRegister from "./pages/LoginRegister";
 import Game from "./pages/Game";
-import Map from "./pages/Map"; // ✅ Add this line
+import map from "./pages/map"; // ✅ lowercase import
 
 function App() {
   return (
@@ -10,7 +10,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LoginRegister />} />
         <Route path="/game" element={<Game />} />
-        <Route path="/map" element={<Map />} /> {/* ✅ Add this route */}
+        <Route path="/map" element={<map />} />
       </Routes>
     </Router>
   );
