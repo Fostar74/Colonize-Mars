@@ -1,8 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import "./CyberKnightPanel.css";
 import knightImage from "../images/CYBER-KNIGHT-3.png";
+import EquipmentSelector from "./EquipmentSelector";
 
 function CyberKnightPanel({ onClose }) {
+  const [selectedSlot, setSelectedSlot] = useState(null);
+
+  const handleSlotClick = (slotName) => {
+    setSelectedSlot(slotName);
+  };
+
+  const closeSelector = () => {
+    setSelectedSlot(null);
+  };
+
   return (
     <div className="cyber-panel-overlay">
       <div className="cyber-panel">
@@ -19,16 +30,20 @@ function CyberKnightPanel({ onClose }) {
           </div>
 
           <div className="equipment-slots">
-            <button className="gear-slot">HELMET</button>
-            <button className="gear-slot">SHIELD</button>
-            <button className="gear-slot">BOOTS</button>
-            <button className="gear-slot">WEAPON</button>
-            <button className="gear-slot">ARMOR</button>
-            <button className="gear-slot">GLOVES</button>
-            <button className="gear-slot">BELT</button>
+            <button className="gear-slot" onClick={() => handleSlotClick("HELMET")}>HELMET</button>
+            <button className="gear-slot" onClick={() => handleSlotClick("SHIELD")}>SHIELD</button>
+            <button className="gear-slot" onClick={() => handleSlotClick("BOOTS")}>BOOTS</button>
+            <button className="gear-slot" onClick={() => handleSlotClick("WEAPON")}>WEAPON</button>
+            <button className="gear-slot" onClick={() => handleSlotClick("ARMOR")}>ARMOR</button>
+            <button className="gear-slot" onClick={() => handleSlotClick("GLOVES")}>GLOVES</button>
+            <button className="gear-slot" onClick={() => handleSlotClick("BELT")}>BELT</button>
           </div>
         </div>
       </div>
+
+      {selectedSlot && (
+        <EquipmentSelector slot={selectedSlot} onClose={closeSelector} />
+      )}
     </div>
   );
 }
