@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./LoginRegister.css";
-import background from "../images/mars-background.jpg"; // ✅ Correct image import
+import background from "../images/mars-background.jpg"; // ✅ Correct image path
 
 const API_BASE = "https://colonize-mars-web-server.onrender.com";
 
@@ -46,7 +46,7 @@ function LoginRegister() {
           localStorage.setItem("castle", JSON.stringify(savedCastle));
 
           setTimeout(() => {
-            window.location.href = "/#/game"; // ✅ Correct redirection
+            window.location.href = "/#/game"; // ✅ Correct destination
           }, 1500);
         }
       } else {
@@ -59,6 +59,7 @@ function LoginRegister() {
 
   return (
     <div
+      className="login-page"
       style={{
         backgroundImage: `url(${background})`,
         backgroundSize: "cover",
@@ -97,6 +98,12 @@ function LoginRegister() {
               value={email}
               required
               onChange={(e) => setEmail(e.target.value)}
+              style={{
+                padding: "10px",
+                marginBottom: "10px",
+                borderRadius: "5px",
+                border: "none",
+              }}
             />
             <input
               type="text"
@@ -104,6 +111,12 @@ function LoginRegister() {
               value={username}
               required
               onChange={(e) => setUsername(e.target.value)}
+              style={{
+                padding: "10px",
+                marginBottom: "10px",
+                borderRadius: "5px",
+                border: "none",
+              }}
             />
           </>
         )}
@@ -115,6 +128,12 @@ function LoginRegister() {
             value={username}
             required
             onChange={(e) => setUsername(e.target.value)}
+            style={{
+              padding: "10px",
+              marginBottom: "10px",
+              borderRadius: "5px",
+              border: "none",
+            }}
           />
         )}
 
@@ -124,8 +143,25 @@ function LoginRegister() {
           value={password}
           required
           onChange={(e) => setPassword(e.target.value)}
+          style={{
+            padding: "10px",
+            marginBottom: "10px",
+            borderRadius: "5px",
+            border: "none",
+          }}
         />
-        <button type="submit">
+        <button
+          type="submit"
+          style={{
+            padding: "10px",
+            marginBottom: "10px",
+            backgroundColor: "#ff4500",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
           {isRegister ? "Register" : "Login"}
         </button>
         <button
@@ -134,12 +170,24 @@ function LoginRegister() {
             setIsRegister(!isRegister);
             setMessage("");
           }}
+          style={{
+            padding: "10px",
+            backgroundColor: "#666",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
         >
           {isRegister ? "Have an account? Log In" : "No account? Register"}
         </button>
       </form>
 
-      {message && <p className="login-message">{message}</p>}
+      {message && (
+        <p className="login-message" style={{ marginTop: "15px" }}>
+          {message}
+        </p>
+      )}
     </div>
   );
 }
