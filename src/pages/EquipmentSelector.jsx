@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import gearData from "../../data/gear";
+import gearData from "../data/gear";
 import "./CyberKnightPanel.css";
 
 function EquipmentSelector({ slot, onClose }) {
