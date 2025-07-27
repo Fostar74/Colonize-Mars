@@ -68,47 +68,65 @@ function Game() {
         </div>
       )}
 
-      {showPopup && (
-        <div className="popup">
-          <div className="popup-header">
-            <span>BASE CONTROL PANEL</span>
-            <button className="close-button" onClick={() => setShowPopup(false)}>
-              X
-            </button>
-          </div>
-          <div className="popup-tabs">
-            <button onClick={() => showTab("structures")}>Structures</button>
-            <button onClick={() => showTab("units")}>Units</button>
-            <button onClick={() => showTab("upgrades")}>Upgrades</button>
-          </div>
-          <div className="popup-content">
-            {activeTab === "structures" && (
-              <div className="popup-section active">
-                <button className="back-button" onClick={() => setShowPopup(false)}>
-                  ← Back
-                </button>
-                <StructurePanel />
-              </div>
-            )}
-            {activeTab === "units" && (
-              <div className="popup-section active">
-                <button className="back-button" onClick={() => showTab("structures")}>
-                  ← Back
-                </button>
-                <div style={{ padding: 20 }}>Unit Hub — Coming Soon</div>
-              </div>
-            )}
-            {activeTab === "upgrades" && (
-              <div className="popup-section active">
-                <button className="back-button" onClick={() => showTab("structures")}>
-                  ← Back
-                </button>
-                <div style={{ padding: 20 }}>Upgrade Lab — Coming Soon</div>
-              </div>
-            )}
+ {showPopup && (
+  <div className="popup">
+    <div className="popup-header">
+      <span>BASE CONTROL PANEL</span>
+      <button className="close-button" onClick={() => setShowPopup(false)}>
+        X
+      </button>
+    </div>
+    <div className="popup-tabs">
+      <button onClick={() => showTab("structures")}>Structures</button>
+      <button onClick={() => showTab("units")}>Units</button>
+      <button onClick={() => showTab("upgrades")}>Upgrades</button>
+    </div>
+    <div className="popup-content">
+      {activeTab === "structures" && (
+        <div className="popup-section active">
+          <button className="back-button" onClick={() => setShowPopup(false)}>
+            ← Back
+          </button>
+          <StructurePanel />
+        </div>
+      )}
+      {activeTab === "units" && (
+        <div className="popup-section active">
+          <button className="back-button" onClick={() => showTab("structures")}>
+            ← Back
+          </button>
+          <div className="units-tab" style={{ padding: "20px" }}>
+            <h3>Army Units</h3>
+            <p>Manage your troops and their training schedule.</p>
+            <ul>
+              <li>Cyber Guards — Level 1 Infantry Unit</li>
+              <li>Rail Snipers — Long-range tactical shooters</li>
+              <li>Hover Raiders — Fast moving front-line units</li>
+              <li>Orbital Mechs — Heavy assault siege walkers</li>
+            </ul>
           </div>
         </div>
       )}
+      {activeTab === "upgrades" && (
+        <div className="popup-section active">
+          <button className="back-button" onClick={() => showTab("structures")}>
+            ← Back
+          </button>
+          <div className="upgrades-tab" style={{ padding: "20px" }}>
+            <h3>Upgrade Center</h3>
+            <p>Enhance your units, unlock tech bonuses, and optimize efficiency.</p>
+            <ul>
+              <li>Unlock Tier II Weapons — Boost unit damage by 15%</li>
+              <li>Upgrade Defensive Matrix — Improve wall durability</li>
+              <li>Enhance March Capacity — +20% troop size</li>
+            </ul>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
 
       {showCyberKnight && (
         <CyberKnightPanel onClose={() => setShowCyberKnight(false)} />
