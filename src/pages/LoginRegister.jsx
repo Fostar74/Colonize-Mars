@@ -1,186 +1,106 @@
-import React, { useState } from "react";
-import "./LoginRegister.css";
-import background from "../images/mars-background.jpg"; // ✅ Correct image import
+import React, { useEffect, useState } from "react";
+import StructurePanel from "./StructurePanel";
+import "./Game.css";
 
-const API_BASE = "https://colonize-mars-web-server.onrender.com";
+function Game() {
+  const [showPopup, setShowPopup] = useState(false);
+  const [activeTab, setActiveTab] = useState("structures");
+  const [castleName, setCastleName] = useState("Headquarter");
+  const [optionsVisible, setOptionsVisible] = useState(false);
 
-function LoginRegister() {
-  const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const endpoint = isRegister ? "/register" : "/login";
-
-    const payload = isRegister
-      ? { email, username, password }
-      : { username, password };
-
-    try {
-      const response = await fetch(`${API_BASE}${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        if (isRegister) {
-          setMessage("✅ Registration successful. Please log in to continue.");
-          setIsRegister(false);
-        } else {
-          setMessage("✅ Login successful! Redirecting...");
-
-          localStorage.setItem("username", data.username || username);
-
-          const savedCastle = data.castle || {
-            username: data.username || username,
-            x: 100 + Math.floor(Math.random() * 50),
-            y: 100 + Math.floor(Math.random() * 50),
-          };
-
-          localStorage.setItem("castle", JSON.stringify(savedCastle));
-
-          setTimeout(() => {
-            window.location.href = "/#/game";
-          }, 1500);
-        }
-      } else {
-        setMessage(data.message || "❌ Something went wrong");
-      }
-    } catch (err) {
-      setMessage("❌ Error connecting to server");
+  useEffect(() => {
+    const saved = localStorage.getItem("castle");
+    if (saved) {
+      const castle = JSON.parse(saved);
+      setCastleName(`Headquarter (${castle.x}:${castle.y})`);
     }
+  }, []);
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/";
+  };
+
+  const showTab = (tabId) => {
+    setActiveTab(tabId);
   };
 
   return (
     <div
+      className="game-container"
       style={{
-        backgroundImage: `url(${background})`, // ✅ JSX-style usage
+        backgroundImage: 'url("../images/mars-background.jpg")',
         backgroundSize: "cover",
-        backgroundPosition: "center",
-        height: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-        color: "white",
-        textShadow: "0 0 5px #000",
-        padding: "20px",
-        boxSizing: "border-box",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center top",
+        minHeight: "100vh",
       }}
     >
-      <h1>{isRegister ? "Create Account" : "Log In"}</h1>
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          width: "300px",
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          padding: "20px",
-          borderRadius: "10px",
-        }}
-      >
-        {isRegister && (
-          <>
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              required
-              onChange={(e) => setEmail(e.target.value)}
-              style={{
-                padding: "10px",
-                marginBottom: "10px",
-                borderRadius: "5px",
-                border: "none",
-              }}
-            />
-            <input
-              type="text"
-              placeholder="Username"
-              value={username}
-              required
-              onChange={(e) => setUsername(e.target.value)}
-              style={{
-                padding: "10px",
-                marginBottom: "10px",
-                borderRadius: "5px",
-                border: "none",
-              }}
-            />
-          </>
-        )}
+      <div className="top-resource-bar">
+        <div>Gold: 10000</div>
+        <div>Iron: 8000</div>
+        <div>Water: 6000</div>
+        <div>Solar: 4000</div>
+      </div>
 
-        {!isRegister && (
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            required
-            onChange={(e) => setUsername(e.target.value)}
-            style={{
-              padding: "10px",
-              marginBottom: "10px",
-              borderRadius: "5px",
-              border: "none",
-            }}
-          />
-        )}
+      <div className="castle-top-bar">
+        <button className="castle-name-btn" onClick={() => setShowPopup(true)}>
+          {castleName}
+        </button>
+      </div>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          required
-          onChange={(e) => setPassword(e.target.value)}
-          style={{
-            padding: "10px",
-            marginBottom: "10px",
-            borderRadius: "5px",
-            border: "none",
-          }}
-        />
-        <button
-          type="submit"
-          style={{
-            padding: "10px",
-            marginBottom: "10px",
-            backgroundColor: "#ff4500",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          {isRegister ? "Register" : "Login"}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setIsRegister(!isRegister);
-            setMessage("");
-          }}
-          style={{
-            padding: "10px",
-            backgroundColor: "#666",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          {isRegister ? "Have an account? Log In" : "No account? Register"}
-        </button>
-      </form>
-      {message && <p style={{ marginTop: "15px" }}>{message}</p>}
+      <div className="bottom-bar">
+        <button>Knights</button>
+        <button>Quests</button>
+        <button>Campaign</button>
+        <button onClick={() => window.location.href = "/#/map"}>Map</button>
+        <button>Alliance</button>
+        <button>Messages</button>
+        <button>Inventory</button>
+        <button onClick={() => setOptionsVisible(!optionsVisible)}>Options</button>
+      </div>
+
+      {optionsVisible && (
+        <div id="optionsMenu">
+          <button onClick={logout}>Log Out</button>
+        </div>
+      )}
+
+      {showPopup && (
+        <div className="popup">
+          <div className="popup-header">
+            <span>BASE CONTROL PANEL</span>
+            <button className="close-button" onClick={() => setShowPopup(false)}>X</button>
+          </div>
+          <div className="popup-tabs">
+            <button onClick={() => showTab("structures")}>Structures</button>
+            <button onClick={() => showTab("units")}>Units</button>
+            <button onClick={() => showTab("upgrades")}>Upgrades</button>
+          </div>
+          <div className="popup-content">
+            {activeTab === "structures" && (
+              <div className="popup-section active">
+                <button className="back-button" onClick={() => setShowPopup(false)}>← Back</button>
+                <StructurePanel />
+              </div>
+            )}
+            {activeTab === "units" && (
+              <div className="popup-section active">
+                <button className="back-button" onClick={() => showTab("structures")}>← Back</button>
+                <div style={{ padding: 20 }}>Unit Hub — Coming Soon</div>
+              </div>
+            )}
+            {activeTab === "upgrades" && (
+              <div className="popup-section active">
+                <button className="back-button" onClick={() => showTab("structures")}>← Back</button>
+                <div style={{ padding: 20 }}>Upgrade Lab — Coming Soon</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-export default LoginRegister;
+export default Game;
