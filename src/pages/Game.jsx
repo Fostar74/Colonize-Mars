@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
-function Map() {
+function Game() {
   const canvasRef = useRef(null);
   const tileSize = 60;
   const mapSize = 200;
@@ -18,18 +18,25 @@ function Map() {
   }, []);
 
   useEffect(() => {
-    const savedCastle = JSON.parse(localStorage.getItem("castle"));
+    const savedCastleRaw = localStorage.getItem("castle");
     const username = localStorage.getItem("username");
 
-    if (!username || !savedCastle) {
+    if (!username || !savedCastleRaw) {
       alert("You are not logged in. Please login first.");
       window.location.href = "/#/";
       return;
     }
 
-    setCastles([savedCastle]);
-    if (hqIcon) {
-      centerMapOn(savedCastle.x, savedCastle.y);
+    try {
+      const savedCastle = JSON.parse(savedCastleRaw);
+      if (!savedCastle || !savedCastle.x || !savedCastle.y) throw new Error();
+      setCastles([savedCastle]);
+      if (hqIcon) {
+        centerMapOn(savedCastle.x, savedCastle.y);
+      }
+    } catch {
+      alert("Invalid castle data. Please log in again.");
+      window.location.href = "/#/";
     }
   }, [hqIcon]);
 
@@ -197,4 +204,4 @@ function Map() {
   );
 }
 
-export default Map;
+export default Game;
