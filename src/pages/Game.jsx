@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import StructurePanel from "./StructurePanel";
+import CyberKnightPanel from "./CyberKnightPanel";
 import "./Game.css";
 
 function Game() {
@@ -7,6 +8,7 @@ function Game() {
   const [activeTab, setActiveTab] = useState("structures");
   const [castleName, setCastleName] = useState("Headquarter");
   const [optionsVisible, setOptionsVisible] = useState(false);
+  const [showCyberKnight, setShowCyberKnight] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("castle");
@@ -50,7 +52,7 @@ function Game() {
       </div>
 
       <div className="bottom-bar">
-        <button>Knights</button>
+        <button onClick={() => setShowCyberKnight(true)}>Cyber Knight</button>
         <button>Quests</button>
         <button>Campaign</button>
         <button onClick={() => (window.location.href = "/#/map")}>Map</button>
@@ -106,6 +108,10 @@ function Game() {
             )}
           </div>
         </div>
+      )}
+
+      {showCyberKnight && (
+        <CyberKnightPanel onClose={() => setShowCyberKnight(false)} />
       )}
     </div>
   );
