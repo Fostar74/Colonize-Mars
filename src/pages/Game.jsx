@@ -12,7 +12,7 @@ function Game() {
     const saved = localStorage.getItem("castle");
     if (saved) {
       const castle = JSON.parse(saved);
-      setCastleName(Headquarter (${castle.x}:${castle.y}));
+      setCastleName(`Headquarter (${castle.x}:${castle.y})`);
     }
   }, []);
 
