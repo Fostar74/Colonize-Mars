@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./LoginRegister.css";
-import background from "../images/mars-background.jpg";
+import background from "../images/mars-background.jpg"; // ✅ Correct image import
 
 const API_BASE = "https://colonize-mars-web-server.onrender.com";
 
@@ -34,15 +34,19 @@ function LoginRegister() {
           setIsRegister(false);
         } else {
           setMessage("✅ Login successful! Redirecting...");
+
           localStorage.setItem("username", data.username || username);
+
           const savedCastle = data.castle || {
             username: data.username || username,
             x: 100 + Math.floor(Math.random() * 50),
             y: 100 + Math.floor(Math.random() * 50),
           };
+
           localStorage.setItem("castle", JSON.stringify(savedCastle));
+
           setTimeout(() => {
-            window.location.href = "/#/game";
+            window.location.href = "/#/game"; // ✅ Correct redirection
           }, 1500);
         }
       } else {
@@ -55,11 +59,36 @@ function LoginRegister() {
 
   return (
     <div
-      className="login-page"
-      style={{ backgroundImage: `url(${background})` }}
+      style={{
+        backgroundImage: `url(${background})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        height: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "column",
+        color: "white",
+        textShadow: "0 0 5px #000",
+        padding: "20px",
+        boxSizing: "border-box",
+      }}
     >
       <h1>{isRegister ? "Create Account" : "Log In"}</h1>
-      <form onSubmit={handleSubmit} className="login-form">
+
+      <form
+        onSubmit={handleSubmit}
+        className="login-form"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "300px",
+          backgroundColor: "rgba(0, 0, 0, 0.6)",
+          padding: "20px",
+          borderRadius: "10px",
+          boxShadow: "0 0 10px black",
+        }}
+      >
         {isRegister && (
           <>
             <input
@@ -96,14 +125,20 @@ function LoginRegister() {
           required
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button type="submit">{isRegister ? "Register" : "Login"}</button>
-        <button type="button" onClick={() => {
-          setIsRegister(!isRegister);
-          setMessage("");
-        }}>
+        <button type="submit">
+          {isRegister ? "Register" : "Login"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setIsRegister(!isRegister);
+            setMessage("");
+          }}
+        >
           {isRegister ? "Have an account? Log In" : "No account? Register"}
         </button>
       </form>
+
       {message && <p className="login-message">{message}</p>}
     </div>
   );
