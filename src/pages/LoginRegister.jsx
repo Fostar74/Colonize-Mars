@@ -59,7 +59,7 @@ function LoginRegister() {
   return (
     <div
       style={{
-        backgroundImage: 'url("/images/mars-background.jpg")',
+       backgroundImage: 'url("../images/mars-background.jpg")',
         backgroundSize: "cover",
         backgroundPosition: "center",
         height: "100vh",
