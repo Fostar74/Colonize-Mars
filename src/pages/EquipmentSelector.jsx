@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import gearData from "../data/gear";
-import "./CyberKnightPanel.css";
+import "../pages/CyberKnightPanel.css";
 
 function EquipmentSelector({ slot, onClose, onEquip }) {
   const [activeTab, setActiveTab] = useState("common");
