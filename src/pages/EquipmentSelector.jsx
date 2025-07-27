@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import gearData from "../data/gear";
 import "./CyberKnightPanel.css";
 
-function EquipmentSelector({ slot, onClose }) {
+function EquipmentSelector({ slot, onClose, onEquip }) {
   const [activeTab, setActiveTab] = useState("common");
 
   const rarityTabs = [
@@ -57,7 +57,9 @@ function EquipmentSelector({ slot, onClose }) {
                 <div className="gear-name">{item.name}</div>
                 <div className="gear-bonus">{item.bonus}</div>
                 <div className="gear-level">Requires Lv {item.levelRequirement}</div>
-                <button className="equip-button">Equip</button>
+                <button className="equip-button" onClick={() => onEquip(slot, item)}>
+                  Equip
+                </button>
               </div>
             ))}
           </div>
