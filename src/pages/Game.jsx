@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import hqIconFile from "../images/hq-icon.png";
 
 function Game() {
   const canvasRef = useRef(null);
@@ -13,7 +14,7 @@ function Game() {
 
   useEffect(() => {
     const img = new Image();
-    img.src = "/images/hq-icon.png";
+    img.src = hqIconFile;
     img.onload = () => setHqIcon(img);
   }, []);
 
