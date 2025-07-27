@@ -6,13 +6,17 @@ function EquipmentSelector({ slot, onClose, onEquip }) {
   const [activeTab, setActiveTab] = useState("common");
   const [inventory, setInventory] = useState([]);
   const [craftingPoints, setCraftingPoints] = useState({});
+  const [equippedItems, setEquippedItems] = useState(() => {
+    const saved = localStorage.getItem("equippedItems");
+    return saved ? JSON.parse(saved) : {};
+  });
 
   const rarityTabs = [
-    { key: "common", label: "Common (Lv 1–10)", color: "#ccc" },
-    { key: "uncommon", label: "Uncommon (Lv 11–15)", color: "#4caf50" },
-    { key: "rare", label: "Rare (Lv 16–20)", color: "#2196f3" },
-    { key: "epic", label: "Epic (Lv 21–30)", color: "#9c27b0" },
-    { key: "legendary", label: "Legendary (Lv 31–50)", color: "#ff9800" },
+    { key: "common", label: "Common", color: "#ccc" },
+    { key: "uncommon", label: "Uncommon", color: "#4caf50" },
+    { key: "rare", label: "Rare", color: "#2196f3" },
+    { key: "epic", label: "Epic", color: "#9c27b0" },
+    { key: "legendary", label: "Legendary", color: "#ff9800" },
   ];
 
   const craftingCosts = {
@@ -70,29 +74,41 @@ function EquipmentSelector({ slot, onClose, onEquip }) {
     }));
   };
 
+  const handleEquip = (item) => {
+    setEquippedItems((prev) => {
+      const updated = { ...prev, [slot]: item };
+      localStorage.setItem("equippedItems", JSON.stringify(updated));
+      return updated;
+    });
+    onEquip(slot, item);
+  };
+
+  const handleUnequip = () => {
+    setEquippedItems((prev) => {
+      const updated = { ...prev };
+      delete updated[slot];
+      localStorage.setItem("equippedItems", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const equipped = equippedItems[slot]?.id;
+
   return (
     <div className="equipment-panel-overlay">
-      <div className="equipment-panel">
+      <div className="equipment-panel expanded">
         <div className="equipment-header">
           <span>VIEW {slot.toUpperCase()} ITEMS</span>
-          <button className="close-button" onClick={onClose}>
-            X
-          </button>
+          <button className="close-button" onClick={onClose}>X</button>
         </div>
 
         <div className="rarity-tabs">
           {rarityTabs.map((tab) => (
             <button
               key={tab.key}
-              className={`rarity-tab ${
-                activeTab === tab.key ? "active-tab" : ""
-              }`}
+              className={`rarity-tab ${activeTab === tab.key ? "active-tab" : ""}`}
               onClick={() => setActiveTab(tab.key)}
-              style={{
-                color: tab.color,
-                borderBottom:
-                  activeTab === tab.key ? `2px solid ${tab.color}` : "none",
-              }}
+              style={{ color: tab.color }}
             >
               {tab.label}
             </button>
@@ -102,42 +118,32 @@ function EquipmentSelector({ slot, onClose, onEquip }) {
         <div className="rarity-content">
           <div className="crafting-points">
             Crafting Points ({slot}): {craftingPoints[slot] || 0}
+            {equipped && (
+              <button className="unequip-button" onClick={handleUnequip}>
+                Unequip
+              </button>
+            )}
           </div>
 
           {filteredGear.length === 0 ? (
-            <p style={{ color: "#ccc", marginTop: "30px" }}>
+            <p className="no-items">
               Currently, you don't have items from the selected type. <br />
               Complete Knight missions to obtain more.
             </p>
           ) : (
-            <div className="gear-list">
+            <div className="gear-grid">
               {filteredGear.map((item) => (
-                <div key={item.id} className="gear-item">
+                <div key={item.id} className={`gear-card ${equipped === item.id ? "equipped" : ""}`}>
                   <div className="gear-name">{item.name}</div>
                   <div className="gear-bonus">{item.bonus}</div>
-                  <div className="gear-level">
-                    Level {item.level || item.levelRequirement} / 50
-                  </div>
+                  <div className="gear-level">Level {item.level || item.levelRequirement} / 50</div>
                   <div className="gear-actions">
+                    <button onClick={() => handleEquip(item)}>Equip</button>
+                    <button onClick={() => handleDismantle(item)}>Dismantle</button>
                     <button
-                      className="equip-button"
-                      onClick={() => onEquip(slot, item)}
-                    >
-                      Equip
-                    </button>
-                    <button
-                      className="dismantle-button"
-                      onClick={() => handleDismantle(item)}
-                    >
-                      Dismantle
-                    </button>
-                    <button
-                      className="craft-button"
                       onClick={() => handleCraft(item)}
-                      disabled={
-                        (item.level || item.levelRequirement) >= 50 ||
-                        (craftingPoints[slot] || 0) < (craftingCosts[item.rarity] || 0)
-                      }
+                      disabled={(item.level || item.levelRequirement) >= 50 ||
+                        (craftingPoints[slot] || 0) < (craftingCosts[item.rarity] || 0)}
                     >
                       Craft
                     </button>
