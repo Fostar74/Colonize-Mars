@@ -1,11 +1,38 @@
 import React, { useState, useEffect } from "react";
 import "./CyberKnightPanel.css";
 import knightImage from "../images/CYBER-KNIGHT-3.png";
-import EquipmentSelector from "./EquipmentSelector";
 
 function CyberKnightPanel({ onClose }) {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [equippedItems, setEquippedItems] = useState({});
+  const [rarityTab, setRarityTab] = useState("Epic");
+  const [activeModal, setActiveModal] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const gearSlots = [
+    "HELMET",
+    "SHIELD",
+    "BOOTS",
+    "WEAPON",
+    "ARMOR",
+    "GLOVES",
+    "BELT",
+  ];
+
+  const mockItems = [
+    {
+      name: "Epic Helmet",
+      level: 31,
+      rarity: "Epic",
+      stats: ["Light Cavalry attack: +71.3", "Macemen attack: +23.8", "Teutonic Knight attack: +35.6"],
+    },
+    {
+      name: "Epic Helmet",
+      level: 31,
+      rarity: "Epic",
+      stats: ["Ram attack: +118.8"],
+    },
+  ];
 
   useEffect(() => {
     const saved = localStorage.getItem("equippedItems");
@@ -20,10 +47,7 @@ function CyberKnightPanel({ onClose }) {
 
   const handleSlotClick = (slotName) => {
     setSelectedSlot(slotName);
-  };
-
-  const closeSelector = () => {
-    setSelectedSlot(null);
+    setRarityTab("Epic");
   };
 
   const handleEquip = (slot, item) => {
@@ -31,18 +55,15 @@ function CyberKnightPanel({ onClose }) {
       ...prev,
       [slot]: item,
     }));
-    closeSelector();
+    setActiveModal(null);
+    setSelectedItem(null);
   };
 
-  const gearSlots = [
-    "HELMET",
-    "SHIELD",
-    "BOOTS",
-    "WEAPON",
-    "ARMOR",
-    "GLOVES",
-    "BELT",
-  ];
+  const handleCloseAll = () => {
+    setSelectedSlot(null);
+    setSelectedItem(null);
+    setActiveModal(null);
+  };
 
   return (
     <div className="cyber-panel-overlay">
@@ -56,11 +77,7 @@ function CyberKnightPanel({ onClose }) {
 
         <div className="cyber-panel-body">
           <div className="cyber-image-container">
-            <img
-              src={knightImage}
-              alt="Cyber Knight"
-              className="cyber-image"
-            />
+            <img src={knightImage} alt="Cyber Knight" className="cyber-image" />
           </div>
 
           <div className="equipment-slots">
@@ -73,9 +90,7 @@ function CyberKnightPanel({ onClose }) {
                   {slot}
                 </button>
                 {equippedItems[slot] && (
-                  <div className="equipped-label">
-                    {equippedItems[slot].name}
-                  </div>
+                  <div className="equipped-label">{equippedItems[slot].name}</div>
                 )}
               </div>
             ))}
@@ -84,11 +99,94 @@ function CyberKnightPanel({ onClose }) {
       </div>
 
       {selectedSlot && (
-        <EquipmentSelector
-          slot={selectedSlot}
-          onClose={closeSelector}
-          onEquip={handleEquip}
-        />
+        <div className="equipment-popup">
+          <div className="equipment-header">
+            <h3>View {selectedSlot} Items</h3>
+            <button onClick={handleCloseAll} className="close-button">X</button>
+          </div>
+
+          <div className="rarity-tabs">
+            {["Common", "Uncommon", "Rare", "Epic", "Legendary"].map((rarity) => (
+              <button
+                key={rarity}
+                className={rarityTab === rarity ? "active" : ""}
+                onClick={() => setRarityTab(rarity)}
+              >
+                {rarity}
+              </button>
+            ))}
+          </div>
+
+          <div className="item-grid">
+            {mockItems
+              .filter((item) => item.rarity === rarityTab)
+              .map((item, index) => (
+                <div key={index} className="item-card">
+                  <h4>{item.name}</h4>
+                  <p>Item Level: {item.level}</p>
+                  <ul>
+                    {item.stats.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                  <div className="item-buttons">
+                    <button onClick={() => { setSelectedItem(item); setActiveModal("equip"); }}>
+                      EQUIP
+                    </button>
+                    <button onClick={() => { setSelectedItem(item); setActiveModal("dismantle"); }}>
+                      DISMANTLE
+                    </button>
+                    <button onClick={() => { setSelectedItem(item); setActiveModal("craft"); }}>
+                      CRAFT
+                    </button>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {activeModal === "equip" && selectedItem && (
+        <div className="modal-window">
+          <h3>Equip {selectedItem.name}?</h3>
+          <ul>
+            {selectedItem.stats.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ul>
+          <button onClick={() => handleEquip(selectedSlot, selectedItem)}>Confirm</button>
+          <button onClick={handleCloseAll}>Cancel</button>
+        </div>
+      )}
+
+      {activeModal === "dismantle" && selectedItem && (
+        <div className="modal-window">
+          <h3>Dismantle {selectedItem.name}?</h3>
+          <p>You will receive 5 Helmet Crafting Points.</p>
+          <button onClick={handleCloseAll}>Confirm</button>
+          <button onClick={() => setActiveModal(null)}>Cancel</button>
+        </div>
+      )}
+
+      {activeModal === "craft" && selectedItem && (
+        <div className="modal-window">
+          <h3>Craft Upgrade</h3>
+          <div className="craft-columns">
+            <div>
+              <h4>Current Item</h4>
+              <p>{selectedItem.name} - Level {selectedItem.level}</p>
+              <ul>{selectedItem.stats.map((s, i) => <li key={i}>{s}</li>)}</ul>
+            </div>
+            <div>
+              <h4>Upgraded Item</h4>
+              <p>{selectedItem.name} - Level {selectedItem.level + 1}</p>
+              <ul>{selectedItem.stats.map((s, i) => <li key={i}>{s.replace(/\d+(\.\d+)?/, match => (+match + 3).toFixed(1))}</li>)}</ul>
+            </div>
+          </div>
+          <p>Required Helmet Crafting Points: 66</p>
+          <button onClick={handleCloseAll}>Craft</button>
+          <button onClick={() => setActiveModal(null)}>Cancel</button>
+        </div>
       )}
     </div>
   );
