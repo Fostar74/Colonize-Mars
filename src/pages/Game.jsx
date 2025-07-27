@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import hqIconFile from "../images/hq-icon.png";
+import hqIconFile from "../images/hq-icon.png"; // ✅ Correct import
 
 function Game() {
   const canvasRef = useRef(null);
