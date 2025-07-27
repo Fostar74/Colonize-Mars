@@ -15,7 +15,7 @@ function EquipmentSelector({ slot, onClose, onEquip }) {
     { key: "legendary", label: "Legendary (Lv 31–50)", color: "#ff9800" },
   ];
 
-  const dismantlePoints = {
+  const craftingCosts = {
     common: 5,
     uncommon: 10,
     rare: 15,
@@ -48,10 +48,25 @@ function EquipmentSelector({ slot, onClose, onEquip }) {
     if (!window.confirm(`Dismantle ${item.name}?`)) return;
     setInventory((prev) => prev.filter((g) => g.id !== item.id));
     const current = craftingPoints[slot] || 0;
-    const added = dismantlePoints[item.rarity] || 0;
+    const added = craftingCosts[item.rarity] || 0;
     setCraftingPoints((prev) => ({
       ...prev,
       [slot]: current + added,
+    }));
+  };
+
+  const handleCraft = (item) => {
+    const cost = craftingCosts[item.rarity] || 0;
+    const current = craftingPoints[slot] || 0;
+    if (item.level >= 50 || current < cost) return;
+
+    const updated = inventory.map((g) =>
+      g.id === item.id ? { ...g, level: g.level + 1 } : g
+    );
+    setInventory(updated);
+    setCraftingPoints((prev) => ({
+      ...prev,
+      [slot]: current - cost,
     }));
   };
 
@@ -101,7 +116,7 @@ function EquipmentSelector({ slot, onClose, onEquip }) {
                   <div className="gear-name">{item.name}</div>
                   <div className="gear-bonus">{item.bonus}</div>
                   <div className="gear-level">
-                    Requires Lv {item.levelRequirement}
+                    Level {item.level || item.levelRequirement} / 50
                   </div>
                   <div className="gear-actions">
                     <button
@@ -115,6 +130,16 @@ function EquipmentSelector({ slot, onClose, onEquip }) {
                       onClick={() => handleDismantle(item)}
                     >
                       Dismantle
+                    </button>
+                    <button
+                      className="craft-button"
+                      onClick={() => handleCraft(item)}
+                      disabled={
+                        (item.level || item.levelRequirement) >= 50 ||
+                        (craftingPoints[slot] || 0) < (craftingCosts[item.rarity] || 0)
+                      }
+                    >
+                      Craft
                     </button>
                   </div>
                 </div>
