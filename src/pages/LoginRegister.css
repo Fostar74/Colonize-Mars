@@ -1,5 +1,5 @@
 .login-page {
-  background-image: url("/images/mars-background.jpg");
+  background-image: url("../images/mars-background.jpg");
   background-size: cover;
   background-position: center;
   height: 100vh;
