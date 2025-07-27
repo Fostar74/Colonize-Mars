@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import hqIconFile from "../images/hq-icon.png"; // ✅ Proper import
 
 function Map() {
   const canvasRef = useRef(null);
@@ -13,7 +14,7 @@ function Map() {
 
   useEffect(() => {
     const img = new Image();
-    img.src = "/images/hq-icon.png";
+    img.src = hqIconFile;
     img.onload = () => setHqIcon(img);
   }, []);
 
