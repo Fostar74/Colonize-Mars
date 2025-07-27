@@ -5,6 +5,7 @@ import EquipmentSelector from "./EquipmentSelector";
 
 function CyberKnightPanel({ onClose }) {
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [equippedItems, setEquippedItems] = useState({});
 
   const handleSlotClick = (slotName) => {
     setSelectedSlot(slotName);
@@ -13,6 +14,16 @@ function CyberKnightPanel({ onClose }) {
   const closeSelector = () => {
     setSelectedSlot(null);
   };
+
+  const handleEquip = (slot, item) => {
+    setEquippedItems((prev) => ({
+      ...prev,
+      [slot]: item,
+    }));
+    closeSelector();
+  };
+
+  const gearSlots = ["HELMET", "SHIELD", "BOOTS", "WEAPON", "ARMOR", "GLOVES", "BELT"];
 
   return (
     <div className="cyber-panel-overlay">
@@ -30,19 +41,28 @@ function CyberKnightPanel({ onClose }) {
           </div>
 
           <div className="equipment-slots">
-            <button className="gear-slot" onClick={() => handleSlotClick("HELMET")}>HELMET</button>
-            <button className="gear-slot" onClick={() => handleSlotClick("SHIELD")}>SHIELD</button>
-            <button className="gear-slot" onClick={() => handleSlotClick("BOOTS")}>BOOTS</button>
-            <button className="gear-slot" onClick={() => handleSlotClick("WEAPON")}>WEAPON</button>
-            <button className="gear-slot" onClick={() => handleSlotClick("ARMOR")}>ARMOR</button>
-            <button className="gear-slot" onClick={() => handleSlotClick("GLOVES")}>GLOVES</button>
-            <button className="gear-slot" onClick={() => handleSlotClick("BELT")}>BELT</button>
+            {gearSlots.map((slot) => (
+              <div key={slot} className="gear-slot-wrapper">
+                <button className="gear-slot" onClick={() => handleSlotClick(slot)}>
+                  {slot}
+                </button>
+                {equippedItems[slot] && (
+                  <div className="equipped-label">
+                    {equippedItems[slot].name}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
       {selectedSlot && (
-        <EquipmentSelector slot={selectedSlot} onClose={closeSelector} />
+        <EquipmentSelector
+          slot={selectedSlot}
+          onClose={closeSelector}
+          onEquip={handleEquip}
+        />
       )}
     </div>
   );
