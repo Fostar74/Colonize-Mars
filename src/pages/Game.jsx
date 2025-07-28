@@ -76,11 +76,7 @@ function Game() {
         X
       </button>
     </div>
-    <div className="popup-tabs">
-      <button onClick={() => showTab("structures")}>Structures</button>
-      <button onClick={() => showTab("units")}>Units</button>
-      <button onClick={() => showTab("upgrades")}>Upgrades</button>
-    </div>
+
     <div className="popup-content">
       {activeTab === "structures" && (
         <div className="popup-section active">
