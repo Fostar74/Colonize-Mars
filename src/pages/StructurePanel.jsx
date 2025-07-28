@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import "./StructurePanel.css";
-import goldIcon from "../images/resources/gold.png";
-import ironIcon from "../images/resources/iron.png";
-import waterIcon from "../images/resources/water.png";
-import solarIcon from "../images/resources/solar.png";
+import goldIcon from "../images/gold.png";
+import ironIcon from "../images/iron.png";
+import waterIcon from "../images/water.png";
+import solarIcon from "../images/solar.png";
 
 const structureTypes = {
   resource: ["Gold Synthesizer", "Iron Driller", "Solar Array", "Water Extractor"],
