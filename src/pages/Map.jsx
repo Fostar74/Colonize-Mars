@@ -794,17 +794,24 @@ useEffect(() => {
   }, []);
 
   useEffect(() => {
-    const savedCastleRaw = localStorage.getItem("castle");
     const username = localStorage.getItem("username");
-    if (!username || !savedCastleRaw) {
+    let savedCastleRaw = localStorage.getItem("castle");
+
+    if (!username) {
       alert("You are not logged in. Please login first.");
       window.location.href = "/#/";
       return;
     }
 
+    // If castle is missing, assign a default
+    if (!savedCastleRaw) {
+      const defaultCastle = { x: 100, y: 100, username };
+      localStorage.setItem("castle", JSON.stringify(defaultCastle));
+      savedCastleRaw = JSON.stringify(defaultCastle);
+    }
+
     try {
       const savedCastle = JSON.parse(savedCastleRaw);
-      if (!savedCastle || !savedCastle.x || !savedCastle.y) throw new Error();
       setCastles([savedCastle]);
       if (hqIcon) centerMapOn(savedCastle.x, savedCastle.y);
     } catch {
