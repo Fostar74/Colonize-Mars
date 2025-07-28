@@ -59,3 +59,53 @@
   margin-top: 10px;
   font-size: 14px;
 }
+.unit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  padding: 10px;
+}
+
+.unit-card {
+  background-color: #1b1b1b;
+  border: 1px solid #888;
+  border-radius: 6px;
+  padding: 12px;
+  text-align: center;
+  color: white;
+}
+
+.unit-card h4 {
+  margin-bottom: 8px;
+  color: #00f0ff;
+}
+
+.unit-card p {
+  font-size: 14px;
+  margin: 4px 0;
+}
+
+.unit-card input {
+  width: 60px;
+  padding: 5px;
+  margin-top: 8px;
+  margin-bottom: 10px;
+  text-align: center;
+  border-radius: 4px;
+  border: 1px solid #666;
+  background-color: #222;
+  color: white;
+}
+
+.unit-card button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.unit-card button:hover {
+  background-color: #0056b3;
+}
