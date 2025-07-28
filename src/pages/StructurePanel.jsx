@@ -1,6 +1,4 @@
-// Final StructurePanel.jsx with updated layout (no top tab bar)
-// Only context-based tabs for Structures, Units, and Upgrades
-
+// Final StructurePanel.jsx with internal tab buttons restored
 import React, { useEffect, useState } from "react";
 import "./StructurePanel.css";
 import goldIcon from "../images/gold.png";
@@ -151,9 +149,16 @@ function StructurePanel() {
 
   return (
     <div style={{ color: "white", padding: "10px" }}>
-      {activeTab === "structures" && renderStructures()}
-      {activeTab === "units" && renderUnits()}
-      {activeTab === "upgrades" && renderUpgrades()}
+      <div className="subtab-buttons">
+        <button onClick={() => setActiveTab("structures")}>Structures</button>
+        <button onClick={() => setActiveTab("units")}>Units</button>
+        <button onClick={() => setActiveTab("upgrades")}>Upgrades</button>
+      </div>
+      <div className="building-tab">
+        {activeTab === "structures" && renderStructures()}
+        {activeTab === "units" && renderUnits()}
+        {activeTab === "upgrades" && renderUpgrades()}
+      </div>
     </div>
   );
 }
