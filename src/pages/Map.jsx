@@ -765,4 +765,241 @@ function Map() {
 ];
 
 
+  useEffect(() => {
+    const gold = new Image();
+    const iron = new Image();
+    const solar = new Image();
+    const water = new Image();
+    const alien = new Image();
+
+    gold.src = goldMineImg;
+    iron.src = ironMineImg;
+    solar.src = solarMineImg;
+    water.src = waterMineImg;
+    alien.src = alienBaseImg;
+
+    const onLoad = () => {
+      setMineIcons({ gold, iron, solar, water });
+      setAlienIcon(alien);
+    };
+
+    gold.onload = onLoad;
+  }, []);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = hqIconFile;
+    img.onload = () => setHqIcon(img);
+  }, []);
+
+  useEffect(() => {
+    const savedCastleRaw = localStorage.getItem("castle");
+    const username = localStorage.getItem("username");
+    if (!username || !savedCastleRaw) {
+      alert("You are not logged in. Please login first.");
+      window.location.href = "/#/";
+      return;
+    }
+
+    try {
+      const savedCastle = JSON.parse(savedCastleRaw);
+      if (!savedCastle || !savedCastle.x || !savedCastle.y) throw new Error();
+      setCastles([savedCastle]);
+      if (hqIcon) centerMapOn(savedCastle.x, savedCastle.y);
+    } catch {
+      alert("Invalid castle data. Please log in again.");
+      window.location.href = "/#/";
+    }
+  }, [hqIcon]);
+
+  useEffect(() => {
+    if (!hqIcon || !alienIcon || Object.keys(mineIcons).length === 0) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // draw grid
+    for (let x = 0; x < mapSize; x++) {
+      for (let y = 0; y < mapSize; y++) {
+        const px = x * tileSize + offset.x;
+        const py = y * tileSize + offset.y;
+        ctx.strokeStyle = "#0077cc";
+        ctx.strokeRect(px, py, tileSize, tileSize);
+      }
+    }
+
+    mineData.forEach((mine) => {
+      const px = mine.x * tileSize + offset.x;
+      const py = mine.y * tileSize + offset.y;
+      const icon = mineIcons[mine.type];
+      if (
+        icon &&
+        px + tileSize >= 0 &&
+        py + tileSize >= 0 &&
+        px < canvas.width &&
+        py < canvas.height
+      ) {
+        ctx.drawImage(icon, px, py, tileSize, tileSize);
+      }
+    });
+
+    alienBases.forEach((base) => {
+      const px = base.x * tileSize + offset.x;
+      const py = base.y * tileSize + offset.y;
+      if (
+        px + tileSize >= 0 &&
+        py + tileSize >= 0 &&
+        px < canvas.width &&
+        py < canvas.height
+      ) {
+        ctx.drawImage(alienIcon, px, py, tileSize, tileSize);
+        ctx.fillStyle = "white";
+        ctx.font = "bold 14px Arial";
+        ctx.fillText(`Lv${base.level}`, px + 5, py + 15);
+      }
+    });
+
+    castles.forEach((c) => {
+      const px = c.x * tileSize + offset.x;
+      const py = c.y * tileSize + offset.y;
+      ctx.drawImage(hqIcon, px, py, tileSize, tileSize);
+      ctx.fillStyle = "white";
+      ctx.font = "12px Arial";
+      ctx.fillText(`${c.username} (${c.x}:${c.y})`, px + 2, py + tileSize - 5);
+    });
+  }, [offset, hqIcon, mineIcons, alienIcon, castles]);
+
+  const centerMapOn = (x, y) => {
+    const canvas = canvasRef.current;
+    setOffset({
+      x: canvas.width / 2 - x * tileSize,
+      y: canvas.height / 2 - y * tileSize,
+    });
+  };
+
+  const handleMouseDown = (e) => {
+    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+  };
+
+  const handleMouseUp = () => setDragStart(null);
+
+  const handleMouseMove = (e) => {
+    const canvas = canvasRef.current;
+
+    if (dragStart) {
+      setOffset({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      });
+      return;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    let hovered = null;
+    for (const c of castles) {
+      const px = c.x * tileSize + offset.x;
+      const py = c.y * tileSize + offset.y;
+      if (
+        mouseX >= px &&
+        mouseX <= px + tileSize &&
+        mouseY >= py &&
+        mouseY <= py + tileSize
+      ) {
+        hovered = c;
+        break;
+      }
+    }
+
+    setHoveredTitle(
+      hovered
+        ? `${hovered.username} – Headquarter (${hovered.x}:${hovered.y})`
+        : ""
+    );
+  };
+
+  const goToCoordinates = () => {
+    const x = parseInt(document.getElementById("xCoord").value);
+    const y = parseInt(document.getElementById("yCoord").value);
+    if (!isNaN(x) && !isNaN(y)) {
+      centerMapOn(x, y);
+    }
+  };
+
+  const searchAlienBase = () => {
+    const level = parseInt(document.getElementById("alienLevel").value);
+    const found = alienBases.find((b) => b.level === level);
+    if (found) {
+      centerMapOn(found.x, found.y);
+      setLastAlienSearch(`Lv${level} (${found.x},${found.y})`);
+    } else {
+      alert("Alien base not found.");
+    }
+  };
+
+  const searchMineType = () => {
+    const type = document.getElementById("mineType").value;
+    const found = mineData.filter((m) => m.type === type);
+    if (found.length > 0) {
+      centerMapOn(found[0].x, found[0].y);
+      setLastMineSearch(found.map((m) => `(${m.x},${m.y})`));
+    } else {
+      alert("Mines not found.");
+    }
+  };
+
+  return (
+    <>
+      {/* canvas and UI remain unchanged above */}
+      <div
+        style={{
+          position: "absolute",
+          top: 140,
+          left: 20,
+          backgroundColor: "rgba(0,0,0,0.7)",
+          padding: 10,
+          borderRadius: 8,
+          color: "white",
+          zIndex: 10,
+        }}
+      >
+        <div>
+          <label>Search Alien Base (Level): </label>
+          <select id="alienLevel">
+            {[...Array(25)].map((_, i) => (
+              <option key={i + 1} value={i + 1}>
+                Level {i + 1}
+              </option>
+            ))}
+          </select>
+          <button onClick={searchAlienBase}>Search</button>
+          {lastAlienSearch && <div>Last: {lastAlienSearch}</div>}
+        </div>
+        <div style={{ marginTop: "10px" }}>
+          <label>Search Resource Type: </label>
+          <select id="mineType">
+            <option value="gold">Gold</option>
+            <option value="iron">Iron</option>
+            <option value="solar">Solar</option>
+            <option value="water">Water</option>
+          </select>
+          <button onClick={searchMineType}>Search</button>
+          {lastMineSearch.length > 0 && (
+            <div>
+              {lastMineSearch.map((coord, idx) => (
+                <div key={idx}>{coord}</div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default Map;
+
+
 //... remaining logic continues ...
