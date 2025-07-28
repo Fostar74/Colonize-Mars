@@ -767,33 +767,6 @@ function Map() {
 //... remaining logic continues ...
 
 useEffect(() => {
-    const gold = new Image();
-    const iron = new Image();
-    const solar = new Image();
-    const water = new Image();
-    const alien = new Image();
-
-    gold.src = goldMineImg;
-    iron.src = ironMineImg;
-    solar.src = solarMineImg;
-    water.src = waterMineImg;
-    alien.src = alienBaseImg;
-
-    const onLoad = () => {
-      setMineIcons({ gold, iron, solar, water });
-      setAlienIcon(alien);
-    };
-
-    gold.onload = onLoad;
-  }, []);
-
-  useEffect(() => {
-    const img = new Image();
-    img.src = hqIconFile;
-    img.onload = () => setHqIcon(img);
-  }, []);
-
-  useEffect(() => {
     const username = localStorage.getItem("username");
     let savedCastleRaw = localStorage.getItem("castle");
 
