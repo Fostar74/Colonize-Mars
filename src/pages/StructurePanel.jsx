@@ -1,5 +1,5 @@
-// Final StructurePanel.jsx with 3-tab layout (Structures / Units / Upgrades)
-// Preserves original logic and training layout from previous version
+// Final StructurePanel.jsx with updated layout (no top tab bar)
+// Only context-based tabs for Structures, Units, and Upgrades
 
 import React, { useEffect, useState } from "react";
 import "./StructurePanel.css";
@@ -59,6 +59,7 @@ function StructurePanel() {
 
   const renderStructures = () => (
     <>
+      <h2 style={{ textAlign: "center" }}>Structures</h2>
       {Object.entries(structureTypes).map(([section, buildings]) => (
         <div key={section}>
           <h3>{section}</h3>
@@ -77,6 +78,7 @@ function StructurePanel() {
 
   const renderUnits = () => (
     <>
+      <h2 style={{ textAlign: "center" }}>Army Units</h2>
       <div className="subtab-buttons">
         {Object.keys(unitCategories).map((cat) => (
           <button key={cat} onClick={() => setUnitTab(cat)}>{cat}</button>
@@ -115,7 +117,7 @@ function StructurePanel() {
 
   const renderUpgrades = () => (
     <>
-      <h3 style={{ textAlign: "center" }}>Upgrades Panel</h3>
+      <h2 style={{ textAlign: "center" }}>Upgrade Center</h2>
       <div className="upgrade-slots">
         {[0, 1].map((slot) => (
           <button key={slot} className="upgrade-slot" onClick={() => setUpgradeSlot(slot)}>
@@ -149,17 +151,9 @@ function StructurePanel() {
 
   return (
     <div style={{ color: "white", padding: "10px" }}>
-      <h2 style={{ textAlign: "center" }}>Base Control Panel</h2>
-      <div className="subtab-buttons">
-        <button onClick={() => setActiveTab("structures")}>Structures</button>
-        <button onClick={() => setActiveTab("units")}>Units</button>
-        <button onClick={() => setActiveTab("upgrades")}>Upgrades</button>
-      </div>
-      <div className="building-tab">
-        {activeTab === "structures" && renderStructures()}
-        {activeTab === "units" && renderUnits()}
-        {activeTab === "upgrades" && renderUpgrades()}
-      </div>
+      {activeTab === "structures" && renderStructures()}
+      {activeTab === "units" && renderUnits()}
+      {activeTab === "upgrades" && renderUpgrades()}
     </div>
   );
 }
