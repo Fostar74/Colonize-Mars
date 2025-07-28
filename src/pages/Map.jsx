@@ -1,5 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import hqIconFile from "../images/hq-icon.png"; // ✅ Proper import
+import hqIconFile from "../images/hq-icon.png";
+import goldMineImg from "../images/mine-gold.png";
+import ironMineImg from "../images/mine-iron.png";
+import solarMineImg from "../images/mine-solar.png";
+import waterMineImg from "../images/mine-water.png";
 
 function Map() {
   const canvasRef = useRef(null);
@@ -11,6 +15,39 @@ function Map() {
   const [castles, setCastles] = useState([]);
   const [hqIcon, setHqIcon] = useState(null);
   const [hoveredTitle, setHoveredTitle] = useState("");
+  const [mineIcons, setMineIcons] = useState({});
+
+  const mineData = [
+    ...Array.from({ length: 15 }, (_, i) => ({ x: i * 3 + 5, y: 10, type: "gold" })),
+    ...Array.from({ length: 15 }, (_, i) => ({ x: i * 3 + 5, y: 30, type: "iron" })),
+    ...Array.from({ length: 15 }, (_, i) => ({ x: i * 3 + 5, y: 50, type: "solar" })),
+    ...Array.from({ length: 15 }, (_, i) => ({ x: i * 3 + 5, y: 70, type: "water" })),
+  ];
+
+  useEffect(() => {
+    const loadImages = async () => {
+      const gold = new Image();
+      const iron = new Image();
+      const solar = new Image();
+      const water = new Image();
+
+      gold.src = goldMineImg;
+      iron.src = ironMineImg;
+      solar.src = solarMineImg;
+      water.src = waterMineImg;
+
+      await Promise.all([
+        new Promise((res) => (gold.onload = res)),
+        new Promise((res) => (iron.onload = res)),
+        new Promise((res) => (solar.onload = res)),
+        new Promise((res) => (water.onload = res)),
+      ]);
+
+      setMineIcons({ gold, iron, solar, water });
+    };
+
+    loadImages();
+  }, []);
 
   useEffect(() => {
     const img = new Image();
@@ -42,12 +79,13 @@ function Map() {
   }, [hqIcon]);
 
   useEffect(() => {
-    if (!hqIcon || castles.length === 0) return;
+    if (!hqIcon || castles.length === 0 || Object.keys(mineIcons).length === 0) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Draw grid
     for (let x = 0; x < mapSize; x++) {
       for (let y = 0; y < mapSize; y++) {
         const px = x * tileSize + offset.x;
@@ -57,6 +95,25 @@ function Map() {
       }
     }
 
+    // Draw mines
+    mineData.forEach((mine) => {
+      const px = mine.x * tileSize + offset.x;
+      const py = mine.y * tileSize + offset.y;
+
+      if (
+        px + tileSize >= 0 &&
+        py + tileSize >= 0 &&
+        px < canvas.width &&
+        py < canvas.height
+      ) {
+        const icon = mineIcons[mine.type];
+        if (icon) {
+          ctx.drawImage(icon, px, py, tileSize, tileSize);
+        }
+      }
+    });
+
+    // Draw castles
     castles.forEach((c) => {
       const px = c.x * tileSize + offset.x;
       const py = c.y * tileSize + offset.y;
@@ -73,7 +130,7 @@ function Map() {
         ctx.fillText(`${c.username} (${c.x}:${c.y})`, px + 2, py + tileSize - 5);
       }
     });
-  }, [offset, castles, hqIcon]);
+  }, [offset, castles, hqIcon, mineIcons]);
 
   const centerMapOn = (x, y) => {
     const canvas = canvasRef.current;
