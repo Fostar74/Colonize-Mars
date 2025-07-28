@@ -9,8 +9,17 @@ const structureTypes = {
 
 const upgradeSlots = 2;
 
+const unitCategories = {
+  "Ground Units": ["Explorer Trooper", "Exo-Soldier", "Plasma Bladesman", "Nano Shieldman"],
+  "Ranged Specialists": ["Railgunner", "Pulse Sniper", "Drone Operator"],
+  "Mobile Units": ["Rover Scout", "Hoverbike Rider", "Mech Walker", "Hover Drone Rider"],
+  "Heavy Systems": ["Demolition Bot", "Missile Carrier", "Particle Blaster", "Orbital Strike Beacon"],
+  "Elite / Nation-Specific": ["Martian Noble", "AI General", "Gene Warrior"]
+};
+
 function StructurePanel() {
   const [activeTab, setActiveTab] = useState("resource");
+  const [unitTab, setUnitTab] = useState("Ground Units");
   const [structureLevels, setStructureLevels] = useState(() => {
     const saved = localStorage.getItem("structureLevels");
     return saved ? JSON.parse(saved) : {};
@@ -25,6 +34,7 @@ function StructurePanel() {
     };
   });
   const [upgradeQueue, setUpgradeQueue] = useState([]);
+  const [trainAmounts, setTrainAmounts] = useState({});
 
   useEffect(() => {
     localStorage.setItem("structureLevels", JSON.stringify(structureLevels));
@@ -148,6 +158,42 @@ function StructurePanel() {
     </div>
   );
 
+  const renderUnitPanel = () => (
+    <div>
+      <div className="subtab-buttons">
+        {Object.keys(unitCategories).map((category) => (
+          <button key={category} onClick={() => setUnitTab(category)}>{category}</button>
+        ))}
+      </div>
+      <div className="unit-grid">
+        {unitCategories[unitTab].map((unit) => (
+          <div key={unit} className="unit-card">
+            <h4>{unit}</h4>
+            <p>Train Time: 00:30</p>
+            <p>Cost: 100 Gold, 80 Iron, 60 Water</p>
+            <input
+              type="number"
+              min="1"
+              placeholder="Qty"
+              value={trainAmounts[unit] || ""}
+              onChange={(e) =>
+                setTrainAmounts({ ...trainAmounts, [unit]: e.target.value })
+              }
+            />
+            <button>Train</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderUpgradesPanel = () => (
+    <div style={{ textAlign: "center", marginTop: "20px", color: "#ccc" }}>
+      <h3>Global Upgrades Panel</h3>
+      <p>Coming soon: enhance unit power, training speed, resource production, and more.</p>
+    </div>
+  );
+
   return (
     <div style={{ color: "white", padding: "10px" }}>
       <h2 style={{ textAlign: "center" }}>Structures</h2>
@@ -155,12 +201,16 @@ function StructurePanel() {
         <button onClick={() => setActiveTab("resource")}>Resources</button>
         <button onClick={() => setActiveTab("economy")}>Economy</button>
         <button onClick={() => setActiveTab("military")}>Military</button>
+        <button onClick={() => setActiveTab("units")}>Units</button>
+        <button onClick={() => setActiveTab("upgrades")}>Upgrades</button>
         <button onClick={() => setActiveTab("future")}>Future-Time Mars Buildings</button>
       </div>
       <div className="building-tab">
         {activeTab === "resource" && renderTab("resource")}
         {activeTab === "economy" && renderTab("economy")}
         {activeTab === "military" && renderTab("military")}
+        {activeTab === "units" && renderUnitPanel()}
+        {activeTab === "upgrades" && renderUpgradesPanel()}
         {activeTab === "future" && renderFutureBuildings()}
       </div>
     </div>
