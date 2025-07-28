@@ -1,9 +1,13 @@
+
+// Colonize Mars Map.jsx with full formatting, mines, and alien bases
+
 import React, { useEffect, useRef, useState } from "react";
 import hqIconFile from "../images/hq-icon.png";
 import goldMineImg from "../images/mine-gold.png";
 import ironMineImg from "../images/mine-iron.png";
 import solarMineImg from "../images/mine-solar.png";
 import waterMineImg from "../images/mine-water.png";
+import alienBaseImg from "../images/alien-base.png";
 
 function Map() {
   const canvasRef = useRef(null);
@@ -16,43 +20,71 @@ function Map() {
   const [hqIcon, setHqIcon] = useState(null);
   const [hoveredTitle, setHoveredTitle] = useState("");
   const [mineIcons, setMineIcons] = useState({});
+  const [alienIcon, setAlienIcon] = useState(null);
 
   const mineData = [
-    ...Array.from({ length: 15 }, (_, i) => ({ x: i * 3 + 5, y: 10, type: "gold" })),
-    ...Array.from({ length: 15 }, (_, i) => ({ x: i * 3 + 5, y: 30, type: "iron" })),
-    ...Array.from({ length: 15 }, (_, i) => ({ x: i * 3 + 5, y: 50, type: "solar" })),
-    ...Array.from({ length: 15 }, (_, i) => ({ x: i * 3 + 5, y: 70, type: "water" })),
+    ...Array.from({ length: 15 }, (_, i) => ({
+      x: i * 3 + 5,
+      y: 10,
+      type: "gold",
+    })),
+    ...Array.from({ length: 15 }, (_, i) => ({
+      x: i * 3 + 5,
+      y: 30,
+      type: "iron",
+    })),
+    ...Array.from({ length: 15 }, (_, i) => ({
+      x: i * 3 + 5,
+      y: 50,
+      type: "solar",
+    })),
+    ...Array.from({ length: 15 }, (_, i) => ({
+      x: i * 3 + 5,
+      y: 70,
+      type: "water",
+    })),
   ];
 
+  const alienBases = Array.from({ length: 25 }, (_, i) => ({
+    x: (i * 4 + 10) % mapSize,
+    y: (i * 7 + 15) % mapSize,
+    level: i + 1,
+  }));
+
   useEffect(() => {
-    const loadImages = async () => {
-      const gold = new Image();
-      const iron = new Image();
-      const solar = new Image();
-      const water = new Image();
+    const gold = new Image();
+    const iron = new Image();
+    const solar = new Image();
+    const water = new Image();
+    const alien = new Image();
 
-      gold.src = goldMineImg;
-      iron.src = ironMineImg;
-      solar.src = solarMineImg;
-      water.src = waterMineImg;
+    gold.src = goldMineImg;
+    iron.src = ironMineImg;
+    solar.src = solarMineImg;
+    water.src = waterMineImg;
+    alien.src = alienBaseImg;
 
-      await Promise.all([
-        new Promise((res) => (gold.onload = res)),
-        new Promise((res) => (iron.onload = res)),
-        new Promise((res) => (solar.onload = res)),
-        new Promise((res) => (water.onload = res)),
-      ]);
+    const onLoad = () => {
+      setMineIcons({
+        gold: gold,
+        iron: iron,
+        solar: solar,
+        water: water,
+      });
 
-      setMineIcons({ gold, iron, solar, water });
+      setAlienIcon(alien);
     };
 
-    loadImages();
+    gold.onload = onLoad;
   }, []);
 
   useEffect(() => {
     const img = new Image();
     img.src = hqIconFile;
-    img.onload = () => setHqIcon(img);
+
+    img.onload = () => {
+      setHqIcon(img);
+    };
   }, []);
 
   useEffect(() => {
@@ -67,8 +99,11 @@ function Map() {
 
     try {
       const savedCastle = JSON.parse(savedCastleRaw);
+
       if (!savedCastle || !savedCastle.x || !savedCastle.y) throw new Error();
+
       setCastles([savedCastle]);
+
       if (hqIcon) {
         centerMapOn(savedCastle.x, savedCastle.y);
       }
@@ -79,26 +114,48 @@ function Map() {
   }, [hqIcon]);
 
   useEffect(() => {
-    if (!hqIcon || castles.length === 0 || Object.keys(mineIcons).length === 0) return;
+    if (
+      !hqIcon ||
+      castles.length === 0 ||
+      Object.keys(mineIcons).length === 0 ||
+      !alienIcon
+    )
+      return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw grid
     for (let x = 0; x < mapSize; x++) {
       for (let y = 0; y < mapSize; y++) {
         const px = x * tileSize + offset.x;
         const py = y * tileSize + offset.y;
+
         ctx.strokeStyle = "#0077cc";
         ctx.strokeRect(px, py, tileSize, tileSize);
       }
     }
 
-    // Draw mines
     mineData.forEach((mine) => {
       const px = mine.x * tileSize + offset.x;
       const py = mine.y * tileSize + offset.y;
+      const icon = mineIcons[mine.type];
+
+      if (
+        icon &&
+        px + tileSize >= 0 &&
+        py + tileSize >= 0 &&
+        px < canvas.width &&
+        py < canvas.height
+      ) {
+        ctx.drawImage(icon, px, py, tileSize, tileSize);
+      }
+    });
+
+    alienBases.forEach((base) => {
+      const px = base.x * tileSize + offset.x;
+      const py = base.y * tileSize + offset.y;
 
       if (
         px + tileSize >= 0 &&
@@ -106,14 +163,13 @@ function Map() {
         px < canvas.width &&
         py < canvas.height
       ) {
-        const icon = mineIcons[mine.type];
-        if (icon) {
-          ctx.drawImage(icon, px, py, tileSize, tileSize);
-        }
+        ctx.drawImage(alienIcon, px, py, tileSize, tileSize);
+        ctx.fillStyle = "white";
+        ctx.font = "bold 14px Arial";
+        ctx.fillText(`Lv${base.level}`, px + 5, py + 15);
       }
     });
 
-    // Draw castles
     castles.forEach((c) => {
       const px = c.x * tileSize + offset.x;
       const py = c.y * tileSize + offset.y;
@@ -130,10 +186,11 @@ function Map() {
         ctx.fillText(`${c.username} (${c.x}:${c.y})`, px + 2, py + tileSize - 5);
       }
     });
-  }, [offset, castles, hqIcon, mineIcons]);
+  }, [offset, castles, hqIcon, mineIcons, alienIcon]);
 
   const centerMapOn = (x, y) => {
     const canvas = canvasRef.current;
+
     setOffset({
       x: canvas.width / 2 - x * tileSize,
       y: canvas.height / 2 - y * tileSize,
@@ -141,10 +198,15 @@ function Map() {
   };
 
   const handleMouseDown = (e) => {
-    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+    setDragStart({
+      x: e.clientX - offset.x,
+      y: e.clientY - offset.y,
+    });
   };
 
-  const handleMouseUp = () => setDragStart(null);
+  const handleMouseUp = () => {
+    setDragStart(null);
+  };
 
   const handleMouseMove = (e) => {
     const canvas = canvasRef.current;
@@ -154,6 +216,7 @@ function Map() {
         x: e.clientX - dragStart.x,
         y: e.clientY - dragStart.y,
       });
+
       return;
     }
 
@@ -162,9 +225,11 @@ function Map() {
     const mouseY = e.clientY - rect.top;
 
     let hovered = null;
+
     for (const c of castles) {
       const px = c.x * tileSize + offset.x;
       const py = c.y * tileSize + offset.y;
+
       if (
         mouseX >= px &&
         mouseX <= px + tileSize &&
@@ -177,13 +242,16 @@ function Map() {
     }
 
     setHoveredTitle(
-      hovered ? `${hovered.username} – Headquarter (${hovered.x}:${hovered.y})` : ""
+      hovered
+        ? `${hovered.username} – Headquarter (${hovered.x}:${hovered.y})`
+        : ""
     );
   };
 
   const goToCoordinates = () => {
     const x = parseInt(document.getElementById("xCoord").value);
     const y = parseInt(document.getElementById("yCoord").value);
+
     if (!isNaN(x) && !isNaN(y) && x >= 1 && x <= 200 && y >= 1 && y <= 200) {
       centerMapOn(x, y);
     } else {
@@ -193,11 +261,16 @@ function Map() {
 
   const searchByUsername = () => {
     const input = document.getElementById("usernameInput").value.trim();
+
     const found = castles.find(
       (c) => c.username.toLowerCase() === input.toLowerCase()
     );
-    if (found) centerMapOn(found.x, found.y);
-    else alert("Player not found.");
+
+    if (found) {
+      centerMapOn(found.x, found.y);
+    } else {
+      alert("Player not found.");
+    }
   };
 
   return (
@@ -213,7 +286,11 @@ function Map() {
         ref={canvasRef}
         width={1200}
         height={800}
-        style={{ display: "block", cursor: "grab", backgroundColor: "#0e3f1f" }}
+        style={{
+          display: "block",
+          cursor: "grab",
+          backgroundColor: "#0e3f1f",
+        }}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
