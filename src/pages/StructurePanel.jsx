@@ -11,8 +11,6 @@ const structureTypes = {
   military: ["Training Center", "Combat Simulator", "Vehicle Bay", "Drone Factory"]
 };
 
-const upgradeSlots = 2;
-
 const unitCategories = {
   "Ground Units": ["Explorer Trooper", "Exo-Soldier", "Plasma Bladesman", "Nano Shieldman"],
   "Ranged Specialists": ["Railgunner", "Pulse Sniper", "Drone Operator"],
@@ -37,7 +35,6 @@ function StructurePanel() {
       Solar: 4000
     };
   });
-  const [upgradeQueue, setUpgradeQueue] = useState([]);
   const [trainAmounts, setTrainAmounts] = useState({});
 
   useEffect(() => {
@@ -47,11 +44,6 @@ function StructurePanel() {
   useEffect(() => {
     localStorage.setItem("playerResources", JSON.stringify(resources));
   }, [resources]);
-
-  const timeForUnits = (qty) => {
-    const base = 30; // seconds per unit
-    return qty * base;
-  };
 
   const formatTime = (seconds) => {
     const h = Math.floor(seconds / 3600);
@@ -66,6 +58,8 @@ function StructurePanel() {
     Water: 60,
     Solar: 40
   };
+
+  const baseTrainTime = 30;
 
   const calculateMaxTrainable = () => {
     const limits = Object.entries(unitCost).map(([res, cost]) =>
@@ -84,7 +78,8 @@ function StructurePanel() {
 
   const renderUnitCard = (unit) => {
     const qty = Number(trainAmounts[unit]) || 0;
-    const time = formatTime(timeForUnits(qty));
+    const totalTime = baseTrainTime * qty;
+    const timeDisplay = formatTime(totalTime);
 
     return (
       <div key={unit} className="unit-card">
@@ -98,7 +93,7 @@ function StructurePanel() {
           <button onClick={() => handlePresetClick(unit, 1)}>+ MAX</button>
         </div>
 
-        <p style={{ marginTop: 6 }}>Train Time: {time}</p>
+        <p>Train Time: {timeDisplay}</p>
 
         <div className="resource-row">
           <div className="resource-cost">
