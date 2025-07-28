@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
 import "./StructurePanel.css";
+import goldIcon from "../images/resources/gold.png";
+import ironIcon from "../images/resources/iron.png";
+import waterIcon from "../images/resources/water.png";
+import solarIcon from "../images/resources/solar.png";
 
 const structureTypes = {
   resource: ["Gold Synthesizer", "Iron Driller", "Solar Array", "Water Extractor"],
@@ -44,16 +48,10 @@ function StructurePanel() {
     localStorage.setItem("playerResources", JSON.stringify(resources));
   }, [resources]);
 
-  const timeForLevel = (level) => {
-    return 78 + Math.floor(((22 * 3600 + 309) - 78) * (level - 1) / 29);
+  const timeForUnits = (qty) => {
+    const base = 30; // seconds per unit
+    return qty * base;
   };
-
-  const costForLevel = (level) => ({
-    Gold: 100 + level * 80,
-    Iron: 50 + level * 40,
-    Water: 30 + level * 30,
-    Solar: 20 + level * 20
-  });
 
   const formatTime = (seconds) => {
     const h = Math.floor(seconds / 3600);
@@ -62,70 +60,107 @@ function StructurePanel() {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  const hasResources = (cost) => {
-    return Object.keys(cost).every(key => resources[key] >= cost[key]);
+  const unitCost = {
+    Gold: 100,
+    Iron: 80,
+    Water: 60,
+    Solar: 40
   };
 
-  const deductResources = (cost) => {
-    setResources(prev => {
-      const updated = { ...prev };
-      for (let key in cost) {
-        updated[key] -= cost[key];
-      }
-      return updated;
-    });
+  const calculateMaxTrainable = () => {
+    const limits = Object.entries(unitCost).map(([res, cost]) =>
+      Math.floor(resources[res] / cost)
+    );
+    return Math.max(0, Math.min(...limits));
   };
 
-  const startUpgrade = (name) => {
-    if (upgradeQueue.length >= upgradeSlots) {
-      alert("Two upgrades already in progress. Please wait.");
-      return;
-    }
-    const currentLevel = structureLevels[name] || 0;
-    if (currentLevel >= 30) return;
-
-    const level = currentLevel + 1;
-    const cost = costForLevel(level);
-    if (!hasResources(cost)) {
-      alert("Not enough resources.");
-      return;
-    }
-    deductResources(cost);
-    const duration = timeForLevel(level);
-    const startTime = Date.now();
-
-    const upgrade = { name, level, duration, startTime };
-    setUpgradeQueue((prev) => [...prev, upgrade]);
-
-    const interval = setInterval(() => {
-      const now = Date.now();
-      const elapsed = Math.floor((now - startTime) / 1000);
-      const percent = Math.min(100, (elapsed / duration) * 100);
-
-      const bar = document.getElementById(`bar-${name}`);
-      if (bar) bar.style.width = `${percent}%`;
-
-      if (elapsed >= duration) {
-        clearInterval(interval);
-        setStructureLevels((prev) => ({
-          ...prev,
-          [name]: level
-        }));
-        setUpgradeQueue((prev) => prev.filter(u => u.name !== name));
-      }
-    }, 1000);
+  const handlePresetClick = (unit, fraction) => {
+    const max = calculateMaxTrainable();
+    setTrainAmounts((prev) => ({
+      ...prev,
+      [unit]: Math.floor(max * fraction)
+    }));
   };
+
+  const renderUnitCard = (unit) => {
+    const qty = Number(trainAmounts[unit]) || 0;
+    const time = formatTime(timeForUnits(qty));
+
+    return (
+      <div key={unit} className="unit-card">
+        <h4>{unit}</h4>
+
+        <div className="train-slider">
+          <button onClick={() => handlePresetClick(unit, 0)}>–</button>
+          <button onClick={() => handlePresetClick(unit, 0.25)}>1/4</button>
+          <button onClick={() => handlePresetClick(unit, 0.5)}>1/2</button>
+          <button onClick={() => handlePresetClick(unit, 0.75)}>3/4</button>
+          <button onClick={() => handlePresetClick(unit, 1)}>+ MAX</button>
+        </div>
+
+        <p style={{ marginTop: 6 }}>Train Time: {time}</p>
+
+        <div className="resource-row">
+          <div className="resource-cost">
+            <img src={goldIcon} alt="Gold" />
+            <span>{unitCost.Gold}</span>
+          </div>
+          <div className="resource-cost">
+            <img src={ironIcon} alt="Iron" />
+            <span>{unitCost.Iron}</span>
+          </div>
+          <div className="resource-cost">
+            <img src={waterIcon} alt="Water" />
+            <span>{unitCost.Water}</span>
+          </div>
+          <div className="resource-cost">
+            <img src={solarIcon} alt="Solar" />
+            <span>{unitCost.Solar}</span>
+          </div>
+        </div>
+
+        <button style={{ marginTop: 10 }}>Train</button>
+      </div>
+    );
+  };
+
+  const renderUnitPanel = () => (
+    <div>
+      <div className="subtab-buttons">
+        {Object.keys(unitCategories).map((category) => (
+          <button key={category} onClick={() => setUnitTab(category)}>
+            {category}
+          </button>
+        ))}
+      </div>
+      <div className="unit-grid">
+        {unitCategories[unitTab].map(renderUnitCard)}
+      </div>
+    </div>
+  );
+
+  const renderUpgradesPanel = () => (
+    <div style={{ textAlign: "center", marginTop: "20px", color: "#ccc" }}>
+      <h3>Global Upgrades Panel</h3>
+      <p>Coming soon: enhance unit power, training speed, resource production, and more.</p>
+    </div>
+  );
 
   const renderBuilding = (name) => {
     const level = structureLevels[name] || 0;
     const nextLevel = level + 1;
-    const cost = costForLevel(nextLevel);
-    const time = formatTime(timeForLevel(nextLevel));
+    const cost = {
+      Gold: 100 + level * 80,
+      Iron: 50 + level * 40,
+      Water: 30 + level * 30,
+      Solar: 20 + level * 20
+    };
+    const time = formatTime(78 + Math.floor(((22 * 3600 + 309) - 78) * (nextLevel - 1) / 29));
 
     return (
       <div key={name} className="building">
         <h3>{name}</h3>
-        <button className="upgrade-btn" onClick={() => startUpgrade(name)}>Upgrade</button>
+        <button className="upgrade-btn" onClick={() => alert("Upgrade coming soon")}>Upgrade</button>
         <div className="progress-bar">
           <div className="progress-bar-fill" id={`bar-${name}`} />
         </div>
@@ -144,74 +179,32 @@ function StructurePanel() {
     </div>
   );
 
-  const renderFutureBuildings = () => (
-    <div className="building-grid">
-      {[
-        "AI Command Nexus", "Teleportation Hub", "Nanite Foundry", "Orbital Cannon",
-        "Bio-engineering Center", "Wormhole Gateway", "Stellar Port"
-      ].map(name => (
-        <div key={name} className="building">
-          <h3>{name}</h3>
-          <p style={{ opacity: 0.6 }}>Locked until future level</p>
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderUnitPanel = () => (
-    <div>
-      <div className="subtab-buttons">
-        {Object.keys(unitCategories).map((category) => (
-          <button key={category} onClick={() => setUnitTab(category)}>{category}</button>
-        ))}
-      </div>
-      <div className="unit-grid">
-        {unitCategories[unitTab].map((unit) => (
-          <div key={unit} className="unit-card">
-            <h4>{unit}</h4>
-            <p>Train Time: 00:30</p>
-            <p>Cost: 100 Gold, 80 Iron, 60 Water</p>
-            <input
-              type="number"
-              min="1"
-              placeholder="Qty"
-              value={trainAmounts[unit] || ""}
-              onChange={(e) =>
-                setTrainAmounts({ ...trainAmounts, [unit]: e.target.value })
-              }
-            />
-            <button>Train</button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderUpgradesPanel = () => (
-    <div style={{ textAlign: "center", marginTop: "20px", color: "#ccc" }}>
-      <h3>Global Upgrades Panel</h3>
-      <p>Coming soon: enhance unit power, training speed, resource production, and more.</p>
+  const renderFutureEra = () => (
+    <div style={{ textAlign: "center", color: "#ccc", marginTop: "20px" }}>
+      <h3>🔒 Future Era</h3>
+      <p>Unlocks new buildings and units at Player Level 40</p>
     </div>
   );
 
   return (
     <div style={{ color: "white", padding: "10px" }}>
-      <h2 style={{ textAlign: "center" }}>Structures</h2>
+      <h2 style={{ textAlign: "center" }}>Base Control Panel</h2>
       <div className="subtab-buttons">
         <button onClick={() => setActiveTab("resource")}>Resources</button>
         <button onClick={() => setActiveTab("economy")}>Economy</button>
         <button onClick={() => setActiveTab("military")}>Military</button>
         <button onClick={() => setActiveTab("units")}>Units</button>
         <button onClick={() => setActiveTab("upgrades")}>Upgrades</button>
-        <button onClick={() => setActiveTab("future")}>Future-Time Mars Buildings</button>
+        <button onClick={() => setActiveTab("future")}>Future Era</button>
       </div>
+
       <div className="building-tab">
         {activeTab === "resource" && renderTab("resource")}
         {activeTab === "economy" && renderTab("economy")}
         {activeTab === "military" && renderTab("military")}
         {activeTab === "units" && renderUnitPanel()}
         {activeTab === "upgrades" && renderUpgradesPanel()}
-        {activeTab === "future" && renderFutureBuildings()}
+        {activeTab === "future" && renderFutureEra()}
       </div>
     </div>
   );
