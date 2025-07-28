@@ -1,4 +1,3 @@
-
 // Colonize Mars – Final Full Map.jsx with Mines, Alien Bases, and Search UI
 
 import React, { useEffect, useRef, useState } from "react";
@@ -765,7 +764,9 @@ function Map() {
 ];
 
 
-  useEffect(() => {
+//... remaining logic continues ...
+
+useEffect(() => {
     const gold = new Image();
     const iron = new Image();
     const solar = new Image();
@@ -1000,6 +1001,3 @@ function Map() {
 }
 
 export default Map;
-
-
-//... remaining logic continues ...
