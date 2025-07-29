@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import gearData from "../data/gear";
+import GameProgressManager from "../utils/gameProgress";
 import "./CyberKnightPanel.css";
 
 function EquipmentSelector({ slot, onClose, onEquip }) {
   const [activeTab, setActiveTab] = useState("common");
   const [inventory, setInventory] = useState([]);
   const [craftingPoints, setCraftingPoints] = useState({});
-  const [equippedItems, setEquippedItems] = useState(() => {
-    const saved = localStorage.getItem("equippedItems");
-    return saved ? JSON.parse(saved) : {};
-  });
+  const [equippedItems, setEquippedItems] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  const progressManager = new GameProgressManager();
 
   const rarityTabs = [
     { key: "common", label: "Common", color: "#ccc" },
@@ -28,24 +29,63 @@ function EquipmentSelector({ slot, onClose, onEquip }) {
   };
 
   useEffect(() => {
-    const savedInventory = localStorage.getItem("gearInventory");
-    const savedCrafting = localStorage.getItem("craftingPoints");
-    if (savedInventory) setInventory(JSON.parse(savedInventory));
-    if (savedCrafting) setCraftingPoints(JSON.parse(savedCrafting));
+    loadEquipmentData();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("gearInventory", JSON.stringify(inventory));
-  }, [inventory]);
+  const loadEquipmentData = async () => {
+    try {
+      const userId = sessionStorage.getItem("userId");
+      if (!userId) {
+        console.error("User ID not found");
+        return;
+      }
+
+      progressManager.setUserInfo(userId, sessionStorage.getItem("username"));
+
+      const equipmentData = await progressManager.loadEquipment();
+      if (equipmentData) {
+        setEquippedItems(equipmentData.equippedItems || {});
+        setInventory(equipmentData.gearInventory || []);
+        setCraftingPoints(equipmentData.craftingPoints || {});
+      } else {
+        const savedEquipped = sessionStorage.getItem("equippedItems");
+        const savedInventory = sessionStorage.getItem("gearInventory");
+        const savedCrafting = sessionStorage.getItem("craftingPoints");
+
+        if (savedEquipped) setEquippedItems(JSON.parse(savedEquipped));
+        if (savedInventory) setInventory(JSON.parse(savedInventory));
+        if (savedCrafting) setCraftingPoints(JSON.parse(savedCrafting));
+      }
+    } catch (error) {
+      console.error("Error loading equipment data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveEquipmentData = async () => {
+    try {
+      const userId = sessionStorage.getItem("userId");
+      if (!userId) return;
+
+      sessionStorage.setItem("equippedItems", JSON.stringify(equippedItems));
+      sessionStorage.setItem("gearInventory", JSON.stringify(inventory));
+      sessionStorage.setItem("craftingPoints", JSON.stringify(craftingPoints));
+
+      await progressManager.saveEquipment(equippedItems, inventory, craftingPoints);
+    } catch (error) {
+      console.error("Error saving equipment data:", error);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem("craftingPoints", JSON.stringify(craftingPoints));
-  }, [craftingPoints]);
+    if (!isLoading) {
+      saveEquipmentData();
+    }
+  }, [inventory, craftingPoints, equippedItems, isLoading]);
 
   const filteredGear = inventory.filter(
-    (item) =>
-      item.slot === slot.toUpperCase() &&
-      item.rarity === activeTab.toLowerCase()
+    (item) => item.slot === slot.toUpperCase() && item.rarity === activeTab.toLowerCase()
   );
 
   const handleDismantle = (item) => {
@@ -64,9 +104,7 @@ function EquipmentSelector({ slot, onClose, onEquip }) {
     const current = craftingPoints[slot] || 0;
     if (item.level >= 50 || current < cost) return;
 
-    const updated = inventory.map((g) =>
-      g.id === item.id ? { ...g, level: g.level + 1 } : g
-    );
+    const updated = inventory.map((g) => (g.id === item.id ? { ...g, level: g.level + 1 } : g));
     setInventory(updated);
     setCraftingPoints((prev) => ({
       ...prev,
@@ -77,7 +115,6 @@ function EquipmentSelector({ slot, onClose, onEquip }) {
   const handleEquip = (item) => {
     setEquippedItems((prev) => {
       const updated = { ...prev, [slot]: item };
-      localStorage.setItem("equippedItems", JSON.stringify(updated));
       return updated;
     });
     onEquip(slot, item);
@@ -87,7 +124,6 @@ function EquipmentSelector({ slot, onClose, onEquip }) {
     setEquippedItems((prev) => {
       const updated = { ...prev };
       delete updated[slot];
-      localStorage.setItem("equippedItems", JSON.stringify(updated));
       return updated;
     });
   };
@@ -99,7 +135,9 @@ function EquipmentSelector({ slot, onClose, onEquip }) {
       <div className="equipment-panel expanded">
         <div className="equipment-header">
           <span>VIEW {slot.toUpperCase()} ITEMS</span>
-          <button className="close-button" onClick={onClose}>X</button>
+          <button className="close-button" onClick={onClose}>
+            X
+          </button>
         </div>
 
         <div className="rarity-tabs">
@@ -142,8 +180,10 @@ function EquipmentSelector({ slot, onClose, onEquip }) {
                     <button onClick={() => handleDismantle(item)}>Dismantle</button>
                     <button
                       onClick={() => handleCraft(item)}
-                      disabled={(item.level || item.levelRequirement) >= 50 ||
-                        (craftingPoints[slot] || 0) < (craftingCosts[item.rarity] || 0)}
+                      disabled={
+                        (item.level || item.levelRequirement) >= 50 ||
+                        (craftingPoints[slot] || 0) < (craftingCosts[item.rarity] || 0)
+                      }
                     >
                       Craft
                     </button>

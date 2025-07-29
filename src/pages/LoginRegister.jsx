@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./LoginRegister.css";
 import background from "../images/mars-background.jpg"; // ✅ Correct image path
 
-const API_BASE = "https://colonize-mars-web-server.onrender.com";
+const API_BASE = "http://localhost:3001";
 
 function LoginRegister() {
   const [isRegister, setIsRegister] = useState(false);
@@ -15,9 +15,7 @@ function LoginRegister() {
     e.preventDefault();
     const endpoint = isRegister ? "/register" : "/login";
 
-    const payload = isRegister
-      ? { email, username, password }
-      : { username, password };
+    const payload = isRegister ? { email, username, password } : { username, password };
 
     try {
       const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -35,15 +33,25 @@ function LoginRegister() {
         } else {
           setMessage("✅ Login successful! Redirecting...");
 
-          localStorage.setItem("username", data.username || username);
+          sessionStorage.setItem("username", data.username || username);
+          sessionStorage.setItem("userId", data.userId);
 
-          const savedCastle = data.castle || {
-            username: data.username || username,
-            x: 100 + Math.floor(Math.random() * 50),
-            y: 100 + Math.floor(Math.random() * 50),
-          };
+          if (data.gameProgress) {
+            sessionStorage.setItem("castle", JSON.stringify(data.gameProgress.castle));
+            sessionStorage.setItem("resources", JSON.stringify(data.gameProgress.resources));
+            sessionStorage.setItem("structures", JSON.stringify(data.gameProgress.structures));
+          } else {
+            const savedCastle = {
+              username: data.username || username,
+              x: 100 + Math.floor(Math.random() * 50),
+              y: 100 + Math.floor(Math.random() * 50),
+            };
+            sessionStorage.setItem("castle", JSON.stringify(savedCastle));
+          }
 
-          localStorage.setItem("castle", JSON.stringify(savedCastle));
+          if (data.gameStats) {
+            sessionStorage.setItem("gameStats", JSON.stringify(data.gameStats));
+          }
 
           setTimeout(() => {
             window.location.href = "/#/game"; // ✅ Correct destination

@@ -88,8 +88,8 @@ function Map() {
   }, []);
 
   useEffect(() => {
-    const savedCastleRaw = localStorage.getItem("castle");
-    const username = localStorage.getItem("username");
+    const savedCastleRaw = sessionStorage.getItem("castle");
+    const username = sessionStorage.getItem("username");
 
     if (!username || !savedCastleRaw) {
       alert("You are not logged in. Please login first.");

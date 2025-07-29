@@ -1,78 +1,207 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const fs = require('fs');
-const path = require('path');
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
+const DatabaseManager = require("../database/database");
 
-const USERS_FILE = path.join(__dirname, '../data/users.json');
+const db = new DatabaseManager();
 
-// Load and Save users
-function loadUsers() {
-  if (!fs.existsSync(USERS_FILE)) return [];
-  const data = fs.readFileSync(USERS_FILE);
-  return JSON.parse(data);
-}
-function saveUsers(users) {
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-}
-
-// REGISTER
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   const { email, password, username } = req.body;
 
   if (!email || !password || !username) {
-    return res.status(400).json({ message: 'All fields are required.' });
+    return res.status(400).json({ message: "All fields are required." });
   }
 
-  const users = loadUsers();
+  try {
+    const existingUserByEmail = db.findUserByEmail(email);
+    if (existingUserByEmail) {
+      return res.status(409).json({ message: "Email is already registered." });
+    }
 
-  const emailExists = users.find(user => user.email === email);
-  const usernameExists = users.find(user => user.username === username);
+    const existingUserByUsername = db.findUserByUsername(username);
+    if (existingUserByUsername) {
+      return res.status(409).json({ message: "Username is already taken." });
+    }
 
-  if (emailExists) {
-    return res.status(409).json({ message: 'Email is already registered.' });
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const result = db.createUser(email, username, hashedPassword);
+
+    res.status(201).json({
+      message: "Registration successful!",
+      userId: result.userId,
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Internal server error during registration." });
   }
-
-  if (usernameExists) {
-    return res.status(409).json({ message: 'Username is already taken.' });
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const newUser = {
-    email,
-    username,
-    password: hashedPassword
-  };
-
-  users.push(newUser);
-  saveUsers(users);
-
-  res.status(201).json({ message: 'Registration successful!' });
 });
 
-// LOGIN (using username + password)
-router.post('/login', async (req, res) => {
+// LOGIN
+router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    return res.status(400).json({ message: 'Username and password required.' });
+    return res.status(400).json({ message: "Username and password required." });
   }
 
-  const users = loadUsers();
-  const user = users.find(u => u.username === username);
+  try {
+    const user = db.findUserByUsername(username);
 
-  if (!user) {
-    return res.status(401).json({ message: 'Invalid username or password.' });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid username or password." });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid username or password." });
+    }
+
+    const gameProgress = db.getGameProgress(user.id);
+    const gameStats = db.getGameStats(user.id);
+
+    res.status(200).json({
+      message: "Login successful!",
+      username: user.username,
+      userId: user.id,
+      gameProgress: gameProgress,
+      gameStats: gameStats,
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Internal server error during login." });
+  }
+});
+
+router.post("/save-progress", async (req, res) => {
+  const { userId, castleData, resources, structures } = req.body;
+
+  if (!userId || !castleData || !resources || !structures) {
+    return res.status(400).json({ message: "All game data is required." });
   }
 
-  const isPasswordValid = await bcrypt.compare(password, user.password);
+  try {
+    const user = db.findUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
 
-  if (!isPasswordValid) {
-    return res.status(401).json({ message: 'Invalid username or password.' });
+    db.saveGameProgress(userId, castleData, resources, structures);
+
+    res.status(200).json({ message: "Game progress saved successfully!" });
+  } catch (error) {
+    console.error("Save progress error:", error);
+    res.status(500).json({ message: "Internal server error while saving progress." });
+  }
+});
+
+router.get("/get-progress/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = db.findUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const gameProgress = db.getGameProgress(userId);
+    const gameStats = db.getGameStats(userId);
+
+    res.status(200).json({
+      gameProgress: gameProgress,
+      gameStats: gameStats,
+    });
+  } catch (error) {
+    console.error("Get progress error:", error);
+    res.status(500).json({ message: "Internal server error while getting progress." });
+  }
+});
+
+router.post("/update-stats", async (req, res) => {
+  const { userId, playTime, resourcesMined, structuresBuilt } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ message: "User ID is required." });
   }
 
-  res.status(200).json({ message: 'Login successful!', username: user.username });
+  try {
+    const user = db.findUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    db.updateGameStats(userId, playTime || 0, resourcesMined || 0, structuresBuilt || 0);
+
+    res.status(200).json({ message: "Game stats updated successfully!" });
+  } catch (error) {
+    console.error("Update stats error:", error);
+    res.status(500).json({ message: "Internal server error while updating stats." });
+  }
+});
+
+router.post("/save-equipment", async (req, res) => {
+  const { userId, equippedItems, gearInventory, craftingPoints } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ message: "User ID is required." });
+  }
+
+  try {
+    const user = db.findUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    db.saveUserEquipment(userId, equippedItems || {}, gearInventory || [], craftingPoints || {});
+
+    res.status(200).json({ message: "Equipment saved successfully!" });
+  } catch (error) {
+    console.error("Save equipment error:", error);
+    res.status(500).json({ message: "Internal server error while saving equipment." });
+  }
+});
+
+router.get("/get-equipment/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = db.findUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const equipment = db.getUserEquipment(userId);
+
+    res.status(200).json({
+      equipment: equipment,
+    });
+  } catch (error) {
+    console.error("Get equipment error:", error);
+    res.status(500).json({ message: "Internal server error while getting equipment." });
+  }
+});
+
+router.post("/update-equipment", async (req, res) => {
+  const { userId, equippedItems, gearInventory, craftingPoints } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ message: "User ID is required." });
+  }
+
+  try {
+    const user = db.findUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    db.updateUserEquipment(userId, equippedItems || {}, gearInventory || [], craftingPoints || {});
+
+    res.status(200).json({ message: "Equipment updated successfully!" });
+  } catch (error) {
+    console.error("Update equipment error:", error);
+    res.status(500).json({ message: "Internal server error while updating equipment." });
+  }
 });
 
 module.exports = router;

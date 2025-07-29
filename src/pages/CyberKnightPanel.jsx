@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./CyberKnightPanel.css";
 import knightImage from "../images/CYBER-KNIGHT-3.png";
+import GameProgressManager from "../utils/gameProgress";
 
 function CyberKnightPanel({ onClose }) {
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -8,6 +9,9 @@ function CyberKnightPanel({ onClose }) {
   const [rarityTab, setRarityTab] = useState("Epic");
   const [activeModal, setActiveModal] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const progressManager = new GameProgressManager();
 
   const gearSlots = ["HELMET", "SHIELD", "BOOTS", "WEAPON", "ARMOR", "GLOVES", "BELT"];
 
@@ -27,15 +31,53 @@ function CyberKnightPanel({ onClose }) {
   ];
 
   useEffect(() => {
-    const saved = localStorage.getItem("equippedItems");
-    if (saved) {
-      setEquippedItems(JSON.parse(saved));
-    }
+    loadEquipmentData();
   }, []);
 
+  const loadEquipmentData = async () => {
+    try {
+      const userId = sessionStorage.getItem("userId");
+      if (!userId) {
+        console.error("User ID not found");
+        return;
+      }
+
+      progressManager.setUserInfo(userId, sessionStorage.getItem("username"));
+
+      const equipmentData = await progressManager.loadEquipment();
+      if (equipmentData) {
+        setEquippedItems(equipmentData.equippedItems || {});
+      } else {
+        const saved = sessionStorage.getItem("equippedItems");
+        if (saved) {
+          setEquippedItems(JSON.parse(saved));
+        }
+      }
+    } catch (error) {
+      console.error("Error loading equipment data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveEquipmentData = async () => {
+    try {
+      const userId = sessionStorage.getItem("userId");
+      if (!userId) return;
+
+      sessionStorage.setItem("equippedItems", JSON.stringify(equippedItems));
+
+      await progressManager.saveEquipment(equippedItems, [], {});
+    } catch (error) {
+      console.error("Error saving equipment data:", error);
+    }
+  };
+
   useEffect(() => {
-    localStorage.setItem("equippedItems", JSON.stringify(equippedItems));
-  }, [equippedItems]);
+    if (!isLoading) {
+      saveEquipmentData();
+    }
+  }, [equippedItems, isLoading]);
 
   const handleSlotClick = (slotName) => {
     setSelectedSlot(slotName);
