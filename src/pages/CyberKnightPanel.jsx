@@ -9,15 +9,7 @@ function CyberKnightPanel({ onClose }) {
   const [activeModal, setActiveModal] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  const gearSlots = [
-    "HELMET",
-    "SHIELD",
-    "BOOTS",
-    "WEAPON",
-    "ARMOR",
-    "GLOVES",
-    "BELT",
-  ];
+  const gearSlots = ["HELMET", "SHIELD", "BOOTS", "WEAPON", "ARMOR", "GLOVES", "BELT"];
 
   const mockItems = [
     {
@@ -83,15 +75,10 @@ function CyberKnightPanel({ onClose }) {
           <div className="equipment-slots">
             {gearSlots.map((slot) => (
               <div key={slot} className="gear-slot-wrapper">
-                <button
-                  className="gear-slot"
-                  onClick={() => handleSlotClick(slot)}
-                >
+                <button className="gear-slot" onClick={() => handleSlotClick(slot)}>
                   {slot}
                 </button>
-                {equippedItems[slot] && (
-                  <div className="equipped-label">{equippedItems[slot].name}</div>
-                )}
+                {equippedItems[slot] && <div className="equipped-label">{equippedItems[slot].name}</div>}
               </div>
             ))}
           </div>
@@ -102,7 +89,9 @@ function CyberKnightPanel({ onClose }) {
         <div className="equipment-popup">
           <div className="equipment-header">
             <h3>View {selectedSlot} Items</h3>
-            <button onClick={handleCloseAll} className="close-button">X</button>
+            <button onClick={handleCloseAll} className="close-button">
+              X
+            </button>
           </div>
 
           <div className="rarity-tabs">
@@ -130,13 +119,28 @@ function CyberKnightPanel({ onClose }) {
                     ))}
                   </ul>
                   <div className="item-buttons">
-                    <button onClick={() => { setSelectedItem(item); setActiveModal("equip"); }}>
+                    <button
+                      onClick={() => {
+                        setSelectedItem(item);
+                        setActiveModal("equip");
+                      }}
+                    >
                       EQUIP
                     </button>
-                    <button onClick={() => { setSelectedItem(item); setActiveModal("dismantle"); }}>
+                    <button
+                      onClick={() => {
+                        setSelectedItem(item);
+                        setActiveModal("dismantle");
+                      }}
+                    >
                       DISMANTLE
                     </button>
-                    <button onClick={() => { setSelectedItem(item); setActiveModal("craft"); }}>
+                    <button
+                      onClick={() => {
+                        setSelectedItem(item);
+                        setActiveModal("craft");
+                      }}
+                    >
                       CRAFT
                     </button>
                   </div>
@@ -174,13 +178,25 @@ function CyberKnightPanel({ onClose }) {
           <div className="craft-columns">
             <div>
               <h4>Current Item</h4>
-              <p>{selectedItem.name} - Level {selectedItem.level}</p>
-              <ul>{selectedItem.stats.map((s, i) => <li key={i}>{s}</li>)}</ul>
+              <p>
+                {selectedItem.name} - Level {selectedItem.level}
+              </p>
+              <ul>
+                {selectedItem.stats.map((s, i) => (
+                  <li key={i}>{s}</li>
+                ))}
+              </ul>
             </div>
             <div>
               <h4>Upgraded Item</h4>
-              <p>{selectedItem.name} - Level {selectedItem.level + 1}</p>
-              <ul>{selectedItem.stats.map((s, i) => <li key={i}>{s.replace(/\d+(\.\d+)?/, match => (+match + 3).toFixed(1))}</li>)}</ul>
+              <p>
+                {selectedItem.name} - Level {selectedItem.level + 1}
+              </p>
+              <ul>
+                {selectedItem.stats.map((s, i) => (
+                  <li key={i}>{s.replace(/\d+(\.\d+)?/, (match) => (+match + 3).toFixed(1))}</li>
+                ))}
+              </ul>
             </div>
           </div>
           <p>Required Helmet Crafting Points: 66</p>

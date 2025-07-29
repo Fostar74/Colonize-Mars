@@ -26,7 +26,7 @@ function Game() {
     <div
       className="game-container"
       style={{
-        backgroundImage: 'url("/images/mars-background.jpg")',
+        backgroundImage: 'url("/images/mars_background.jpg")',
         backgroundSize: "cover",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "center top",
@@ -83,9 +83,7 @@ function Game() {
         </div>
       )}
 
-      {showCyberKnight && (
-        <CyberKnightPanel onClose={() => setShowCyberKnight(false)} />
-      )}
+      {showCyberKnight && <CyberKnightPanel onClose={() => setShowCyberKnight(false)} />}
     </div>
   );
 }
