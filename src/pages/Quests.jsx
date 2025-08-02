@@ -18,10 +18,10 @@ const Quests = () => {
         <div className="quest-title">Upgrade all production buildings to level 3</div>
         <div className="quest-progress">{mainQuestCompleted ? "4 / 4" : "0 / 4"}</div>
         <div className="quest-rewards">
-          <span>500</span><img src="/images/gold-icon.png" alt="Gold" />
-          <span>500</span><img src="/images/iron-icon.png" alt="Iron" />
-          <span>500</span><img src="/images/wood-icon.png" alt="Wood" />
-          <span>500</span><img src="/images/food-icon.png" alt="Food" />
+          <span>500</span><img src="/images/gold.png" alt="Gold" />
+          <span>500</span><img src="/images/iron.png" alt="Iron" />
+          <span>500</span><img src="/images/water.png" alt="Water" />
+          <span>500</span><img src="/images/solar.png" alt="Solar" />
         </div>
         <button onClick={handleMainQuest}>Show Me</button>
       </div>
@@ -36,9 +36,9 @@ const Quests = () => {
         <div className="quest-title">Level up your Cyber Knight to level 2</div>
         <div className="quest-progress">{cyberKnightLevel >= 2 ? "2 / 2" : "1 / 2"}</div>
         <div className="quest-rewards">
-          <img src="/images/speedup-icon.png" alt="Speedup" /> x1
-          <img src="/images/armor-icon.png" alt="Armor" /> x25
+          <img src="/images/helmet-icon.png" alt="Helmet" /> x1
           <img src="/images/gloves-icon.png" alt="Gloves" /> x25
+          <img src="/images/armor-icon.png" alt="Armor" /> x25
           <img src="/images/boots-icon.png" alt="Boots" /> x25
         </div>
         <button onClick={handleLevelUpKnight}>Show Me</button>
@@ -60,9 +60,8 @@ const Quests = () => {
     <div className="quest-section">
       <h3>Activity Rewards</h3>
       <div className="wheel-placeholder">
-        <p>Spinning Wheel UI Coming Soon</p>
-        <p>Free roll every 2 hours or use Tokens to spin again.</p>
-        <button disabled>Spin</button>
+        <p>🎯 Free spin every 2 hours or spend tokens to spin again.</p>
+        <button disabled>Spin Wheel</button>
         <div className="tokens-count">Tokens: 0</div>
       </div>
     </div>
