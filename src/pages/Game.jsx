@@ -150,4 +150,5 @@ function Game() {
   );
 }
 
-export defauA111ame;
+export default Game;
+
