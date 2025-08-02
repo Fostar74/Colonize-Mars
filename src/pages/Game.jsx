@@ -7,10 +7,10 @@ import "./Game.css";
 
 function Game() {
   const [showPopup, setShowPopup] = useState(false);
-  const [showCyberKnight, setShowCyberKnight] = useState(false);
-  const [showQuests, setShowQuests] = useState(false);
   const [castleName, setCastleName] = useState("Headquarter");
   const [optionsVisible, setOptionsVisible] = useState(false);
+  const [showCyberKnight, setShowCyberKnight] = useState(false);
+  const [showQuests, setShowQuests] = useState(false);
   const [gameProgress, setGameProgress] = useState(null);
   const [resources, setResources] = useState({
     gold: 10000,
@@ -70,7 +70,10 @@ function Game() {
     }, 10000);
 
     const countdownInterval = setInterval(() => {
-      setTimeUntilNextProduction((prev) => (prev <= 1 ? 10 : prev - 1));
+      setTimeUntilNextProduction((prev) => {
+        if (prev <= 1) return 10;
+        return prev - 1;
+      });
     }, 1000);
 
     return () => {
@@ -120,7 +123,9 @@ function Game() {
 
       if (userId) {
         const gameStats = await progressManager.getGameStats(userId);
-        if (gameStats) console.log("📊 Status loaded:", gameStats);
+        if (gameStats) {
+          console.log("📊 Status loaded:", gameStats);
+        }
       }
     } catch (error) {
       console.error("Error loading game data:", error);
@@ -149,6 +154,7 @@ function Game() {
             totalResourcesProduced.solar;
           await progressManager.updateGameStats(userId, 0, totalProduced, 0);
         }
+
         console.log("✅ Progress saved!");
       } else {
         console.warn("⚠️ Error on saving progress");
@@ -165,26 +171,20 @@ function Game() {
   };
 
   return (
-    <div
-      className="game-container"
-      style={{
-        backgroundImage: 'url("/images/mars_background.jpg")',
-        backgroundSize: "cover",
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center top",
-        minHeight: "100vh",
-      }}
-    >
+    <div className="game-container" style={{
+      backgroundImage: 'url("/images/mars_background.jpg")',
+      backgroundSize: "cover",
+      backgroundRepeat: "no-repeat",
+      backgroundPosition: "center top",
+      minHeight: "100vh",
+    }}>
+
       <div className="top-resource-bar">
-        {["gold", "iron", "water", "solar"].map((res) => (
-          <div key={res} className={`resource-item ${isProducing ? "producing" : ""}`}>
-            <div className={`resource-icon ${res}-icon`}></div>
-            <span>{res.charAt(0).toUpperCase() + res.slice(1)}: {resources[res].toLocaleString()}</span>
-          </div>
-        ))}
-        <div className="production-timer">
-          <span>⏰ Next Generation: {timeUntilNextProduction}s</span>
-        </div>
+        <div className={`resource-item ${isProducing ? "producing" : ""}`}><div className="resource-icon gold-icon"></div><span>Gold: {resources.gold.toLocaleString()}</span></div>
+        <div className={`resource-item ${isProducing ? "producing" : ""}`}><div className="resource-icon iron-icon"></div><span>Iron: {resources.iron.toLocaleString()}</span></div>
+        <div className={`resource-item ${isProducing ? "producing" : ""}`}><div className="resource-icon water-icon"></div><span>Water: {resources.water.toLocaleString()}</span></div>
+        <div className={`resource-item ${isProducing ? "producing" : ""}`}><div className="resource-icon solar-icon"></div><span>Solar: {resources.solar.toLocaleString()}</span></div>
+        <div className="production-timer"><span>⏰ Next Generation: {timeUntilNextProduction}s</span></div>
         {isSaving && <div className="saving-indicator"><span>💾 Saving...</span></div>}
       </div>
 
