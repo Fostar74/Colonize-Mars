@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
 import StructurePanel from "./StructurePanel";
 import CyberKnightPanel from "./CyberKnightPanel";
+import Quests from "./Quests";
 import GameProgressManager from "../utils/gameProgress";
 import "./Game.css";
 
 function Game() {
   const [showPopup, setShowPopup] = useState(false);
+  const [showCyberKnight, setShowCyberKnight] = useState(false);
+  const [showQuests, setShowQuests] = useState(false);
   const [castleName, setCastleName] = useState("Headquarter");
   const [optionsVisible, setOptionsVisible] = useState(false);
-  const [showCyberKnight, setShowCyberKnight] = useState(false);
   const [gameProgress, setGameProgress] = useState(null);
   const [resources, setResources] = useState({
     gold: 10000,
@@ -64,17 +66,11 @@ function Game() {
       });
 
       setTimeout(() => setIsProducing(false), 1000);
-
       setTimeout(() => setShowProductionNotification(false), 3000);
     }, 10000);
 
     const countdownInterval = setInterval(() => {
-      setTimeUntilNextProduction((prev) => {
-        if (prev <= 1) {
-          return 10;
-        }
-        return prev - 1;
-      });
+      setTimeUntilNextProduction((prev) => (prev <= 1 ? 10 : prev - 1));
     }, 1000);
 
     return () => {
@@ -112,7 +108,6 @@ function Game() {
       } else {
         const sessionCastle = sessionStorage.getItem("castle");
         const sessionResources = sessionStorage.getItem("resources");
-        const sessionStructures = sessionStorage.getItem("structures");
 
         if (sessionCastle) {
           const castle = JSON.parse(sessionCastle);
@@ -125,9 +120,7 @@ function Game() {
 
       if (userId) {
         const gameStats = await progressManager.getGameStats(userId);
-        if (gameStats) {
-          console.log("📊 Status loaded:", gameStats);
-        }
+        if (gameStats) console.log("📊 Status loaded:", gameStats);
       }
     } catch (error) {
       console.error("Error loading game data:", error);
@@ -156,7 +149,6 @@ function Game() {
             totalResourcesProduced.solar;
           await progressManager.updateGameStats(userId, 0, totalProduced, 0);
         }
-
         console.log("✅ Progress saved!");
       } else {
         console.warn("⚠️ Error on saving progress");
@@ -168,14 +160,7 @@ function Game() {
 
   const logout = () => {
     saveGameProgress();
-
-    sessionStorage.removeItem("username");
-    sessionStorage.removeItem("userId");
-    sessionStorage.removeItem("castle");
-    sessionStorage.removeItem("resources");
-    sessionStorage.removeItem("structures");
-    sessionStorage.removeItem("gameStats");
-
+    sessionStorage.clear();
     window.location.href = "/";
   };
 
@@ -191,41 +176,25 @@ function Game() {
       }}
     >
       <div className="top-resource-bar">
-        <div className={`resource-item ${isProducing ? "producing" : ""}`}>
-          <div className="resource-icon gold-icon"></div>
-          <span>Gold: {resources.gold.toLocaleString()}</span>
-        </div>
-        <div className={`resource-item ${isProducing ? "producing" : ""}`}>
-          <div className="resource-icon iron-icon"></div>
-          <span>Iron: {resources.iron.toLocaleString()}</span>
-        </div>
-        <div className={`resource-item ${isProducing ? "producing" : ""}`}>
-          <div className="resource-icon water-icon"></div>
-          <span>Water: {resources.water.toLocaleString()}</span>
-        </div>
-        <div className={`resource-item ${isProducing ? "producing" : ""}`}>
-          <div className="resource-icon solar-icon"></div>
-          <span>Solar: {resources.solar.toLocaleString()}</span>
-        </div>
+        {["gold", "iron", "water", "solar"].map((res) => (
+          <div key={res} className={`resource-item ${isProducing ? "producing" : ""}`}>
+            <div className={`resource-icon ${res}-icon`}></div>
+            <span>{res.charAt(0).toUpperCase() + res.slice(1)}: {resources[res].toLocaleString()}</span>
+          </div>
+        ))}
         <div className="production-timer">
           <span>⏰ Next Generation: {timeUntilNextProduction}s</span>
         </div>
-        {isSaving && (
-          <div className="saving-indicator">
-            <span>💾 Saving...</span>
-          </div>
-        )}
+        {isSaving && <div className="saving-indicator"><span>💾 Saving...</span></div>}
       </div>
 
       <div className="castle-top-bar">
-        <button className="castle-name-btn" onClick={() => setShowPopup(true)}>
-          {castleName}
-        </button>
+        <button className="castle-name-btn" onClick={() => setShowPopup(true)}>{castleName}</button>
       </div>
 
       <div className="bottom-bar">
         <button onClick={() => setShowCyberKnight(true)}>Cyber Knight</button>
-        <button>Quests</button>
+        <button onClick={() => setShowQuests(true)}>Quests</button>
         <button>Campaign</button>
         <button onClick={() => (window.location.href = "/#/map")}>Map</button>
         <button>Alliance</button>
@@ -244,16 +213,11 @@ function Game() {
         <div className="popup">
           <div className="popup-header">
             <span>BASE CONTROL PANEL</span>
-            <button className="close-button" onClick={() => setShowPopup(false)}>
-              X
-            </button>
+            <button className="close-button" onClick={() => setShowPopup(false)}>X</button>
           </div>
-
           <div className="popup-content">
             <div className="popup-section active">
-              <button className="back-button" onClick={() => setShowPopup(false)}>
-                ← Back
-              </button>
+              <button className="back-button" onClick={() => setShowPopup(false)}>← Back</button>
               <StructurePanel />
             </div>
           </div>
@@ -262,7 +226,16 @@ function Game() {
 
       {showCyberKnight && <CyberKnightPanel onClose={() => setShowCyberKnight(false)} />}
 
-      {/* اعلان تولید منابع */}
+      {showQuests && (
+        <div className="popup">
+          <div className="popup-header">
+            <span>QUESTS</span>
+            <button className="close-button" onClick={() => setShowQuests(false)}>X</button>
+          </div>
+          <Quests />
+        </div>
+      )}
+
       {showProductionNotification && (
         <div className="production-notification">
           <div className="notification-content">
