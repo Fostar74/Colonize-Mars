@@ -9,6 +9,8 @@ if (!fs.existsSync(dbDir)) {
 
 const dbPath = process.env.DATABASE_PATH || path.join(dbDir, "colonize_mars.db");
 const db = new Database(dbPath);
+db.pragma("busy_timeout = 5000");
+db.pragma("journal_mode = WAL");
 
 function initializeDatabase() {
   try {
@@ -71,6 +73,14 @@ function initializeDatabase() {
         UNIQUE(x, y)
       )
     `);
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS base_positions (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id),
+        x INTEGER NOT NULL CHECK(x BETWEEN 1 AND 200),
+        y INTEGER NOT NULL CHECK(y BETWEEN 1 AND 200),
+        UNIQUE(x, y)
+      )
+    `);
     console.log("Database initialized successfully");
   } catch (error) {
     console.error("Error initializing database:", error);
@@ -112,7 +122,7 @@ class DatabaseManager {
       `),
 
       getProgress: db.prepare(`
-        SELECT * FROM game_progress WHERE user_id = ? ORDER BY id DESC LIMIT 1
+        SELECT * FROM game_progress WHERE user_id = ? ORDER BY last_saved DESC, id DESC LIMIT 1 ORDER BY id DESC LIMIT 1
       `),
 
       updateProgress: db.prepare(`
@@ -193,23 +203,37 @@ class DatabaseManager {
   }
 
   createUser(email, username, hashedPassword) {
-    try {
+    return db.transaction(() => {
       const result = this.userQueries.createUser.run(email, username, hashedPassword);
-      const userId = result.lastInsertRowid;
-
+      const userId = Number(result.lastInsertRowid);
       this.statsQueries.createStats.run(userId);
-
-      return { success: true, userId };
-    } catch (error) {
-      if (error.code === "SQLITE_CONSTRAINT_UNIQUE") {
-        if (error.message.includes("email")) {
-          throw new Error("Email is already registered");
-        } else if (error.message.includes("username")) {
-          throw new Error("Username is already taken");
+      const occupied = db.prepare(`
+        SELECT 1 FROM base_positions WHERE x = ? AND y = ?
+        UNION ALL
+        SELECT 1 FROM game_progress
+        WHERE json_valid(castle_data)
+          AND CAST(json_extract(castle_data, '$.x') AS INTEGER) = ?
+          AND CAST(json_extract(castle_data, '$.y') AS INTEGER) = ?
+        LIMIT 1
+      `);
+      const reserve = db.prepare("INSERT INTO base_positions (user_id, x, y) VALUES (?, ?, ?)");
+      let position = null;
+      for (let i = 0; i < 40000; i++) {
+        const x = (i % 200) + 1;
+        const y = Math.floor(i / 200) + 1;
+        if (!occupied.get(x, y, x, y)) {
+          reserve.run(userId, x, y);
+          position = { x, y };
+          break;
         }
       }
-      throw error;
-    }
+      if (!position) throw new Error("Mars map is full");
+      db.prepare(`INSERT INTO game_progress
+        (user_id, castle_data, resources, structures) VALUES (?, ?, ?, ?)`)
+        .run(userId, JSON.stringify({ username, ...position }),
+          JSON.stringify({ Gold: 0, Iron: 0, Water: 0, Solar: 0 }), JSON.stringify({}));
+      return { success: true, userId, position };
+    })();
   }
 
   findUserByEmail(email) {
@@ -225,21 +249,18 @@ class DatabaseManager {
   }
 
   saveGameProgress(userId, castleData, resources, structures) {
-    try {
-      const castleJson = JSON.stringify(castleData);
-      const resourcesJson = JSON.stringify(resources);
-      const structuresJson = JSON.stringify(structures);
-
+    return db.transaction(() => {
       const existing = this.progressQueries.getProgress.get(userId);
-      if (existing) {
-        this.progressQueries.updateProgress.run(castleJson, resourcesJson, structuresJson, userId);
-      } else {
-        this.progressQueries.saveProgress.run(userId, castleJson, resourcesJson, structuresJson);
-      }
+      if (!existing) throw new Error("Progress not initialized");
+      const originalCastle = JSON.parse(existing.castle_data);
+      const safeCastle = { ...castleData, x: originalCastle.x, y: originalCastle.y };
+      db.prepare(`
+        UPDATE game_progress SET castle_data = ?, resources = ?, structures = ?,
+          last_saved = CURRENT_TIMESTAMP WHERE id = ?
+      `).run(JSON.stringify(safeCastle), JSON.stringify(resources),
+        JSON.stringify(structures), existing.id);
       return { success: true };
-    } catch (error) {
-      throw error;
-    }
+    })();
   }
 
   getGameProgress(userId) {
