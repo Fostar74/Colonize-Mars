@@ -58,6 +58,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid username or password." });
     }
 
+    db.ensureBase(user.id, user.username);
     const gameProgress = db.getGameProgress(user.id);
     const gameStats = db.getGameStats(user.id);
 
@@ -87,7 +88,9 @@ router.post("/save-progress", async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    db.saveGameProgress(userId, castleData, resources, structures);
+    const assigned = db.ensureBase(user.id, user.username);
+    // Never trust client-provided map coordinates.
+    db.saveGameProgress(userId, assigned, resources, structures);
 
     res.status(200).json({ message: "Game progress saved successfully!" });
   } catch (error) {
