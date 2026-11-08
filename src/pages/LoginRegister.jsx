@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./LoginRegister.css";
 import background from "../images/mars-background.jpg"; // ✅ Correct image path
 
-const API_BASE = "http://localhost:3001";
+const API_BASE = (process.env.REACT_APP_API_URL || "http://localhost:3001").replace(/\/$/, "");
 
 function LoginRegister() {
   const [isRegister, setIsRegister] = useState(false);
@@ -41,12 +41,9 @@ function LoginRegister() {
             sessionStorage.setItem("resources", JSON.stringify(data.gameProgress.resources));
             sessionStorage.setItem("structures", JSON.stringify(data.gameProgress.structures));
           } else {
-            const savedCastle = {
-              username: data.username || username,
-              x: 100 + Math.floor(Math.random() * 50),
-              y: 100 + Math.floor(Math.random() * 50),
-            };
-            sessionStorage.setItem("castle", JSON.stringify(savedCastle));
+            sessionStorage.removeItem("castle");
+            sessionStorage.removeItem("resources");
+            sessionStorage.removeItem("structures");
           }
 
           if (data.gameStats) {
