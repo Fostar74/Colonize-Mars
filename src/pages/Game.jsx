@@ -8,11 +8,16 @@ function Game() {
   const [showPopup, setShowPopup] = useState(false);
   const [activeTab, setActiveTab] = useState("structures");
   const [castleName, setCastleName] = useState("Headquarter");
+  const [resources, setResources] = useState(null);
   const [optionsVisible, setOptionsVisible] = useState(false);
   const [showCyberKnight, setShowCyberKnight] = useState(false);
   const [showQuests, setShowQuests] = useState(false);
 
   useEffect(() => {
+    const savedResources = sessionStorage.getItem("resources");
+    if (savedResources) {
+      try { setResources(JSON.parse(savedResources)); } catch (_) {}
+    }
     const saved = sessionStorage.getItem("castle");
     if (saved) {
       const castle = JSON.parse(saved);
@@ -41,10 +46,10 @@ function Game() {
       }}
     >
       <div className="top-resource-bar">
-        <div>Gold: 10000</div>
-        <div>Iron: 8000</div>
-        <div>Water: 6000</div>
-        <div>Solar: 4000</div>
+        <div>Gold: {resources?.Gold ?? resources?.gold ?? "—"}</div>
+        <div>Iron: {resources?.Iron ?? resources?.iron ?? "—"}</div>
+        <div>Water: {resources?.Water ?? resources?.water ?? "—"}</div>
+        <div>Solar: {resources?.Solar ?? resources?.solar ?? "—"}</div>
       </div>
 
       <div className="castle-top-bar">
