@@ -8,7 +8,9 @@ const db = new DatabaseManager();
 router.post("/register", async (req, res) => {
   const { email, password, username } = req.body;
 
-  if (!email || !password || !username) {
+  if (typeof email !== "string" || typeof password !== "string" ||
+      typeof username !== "string" || !email.trim() || !username.trim() ||
+      password.length < 8 || username.length > 32 || email.length > 254) {
     return res.status(400).json({ message: "All fields are required." });
   }
 
@@ -25,14 +27,18 @@ router.post("/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const result = db.createUser(email, username, hashedPassword);
+    const result = db.createUser(email.trim().toLowerCase(), username.trim(), hashedPassword);
 
     res.status(201).json({
       message: "Registration successful!",
       userId: result.userId,
+      position: result.position,
     });
   } catch (error) {
     console.error("Registration error:", error);
+    if (error.code === "SQLITE_CONSTRAINT_UNIQUE") {
+      return res.status(409).json({ message: "Email or username already exists." });
+    }
     res.status(500).json({ message: "Internal server error during registration." });
   }
 });
