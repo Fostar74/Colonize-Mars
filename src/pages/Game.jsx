@@ -13,7 +13,7 @@ function Game() {
   const [showQuests, setShowQuests] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("castle");
+    const saved = sessionStorage.getItem("castle");
     if (saved) {
       const castle = JSON.parse(saved);
       setCastleName(`Headquarter (${castle.x}:${castle.y})`);
@@ -21,7 +21,7 @@ function Game() {
   }, []);
 
   const logout = () => {
-    localStorage.removeItem("token");
+    sessionStorage.clear();
     window.location.href = "/";
   };
 
