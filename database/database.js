@@ -7,7 +7,7 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const dbPath = path.join(dbDir, "colonize_mars.db");
+const dbPath = process.env.DATABASE_PATH || path.join(dbDir, "colonize_mars.db");
 const db = new Database(dbPath);
 
 function initializeDatabase() {
@@ -63,6 +63,14 @@ function initializeDatabase() {
     `);
     console.log("User equipment table created/verified");
 
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS base_positions (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id),
+        x INTEGER NOT NULL CHECK(x BETWEEN 1 AND 200),
+        y INTEGER NOT NULL CHECK(y BETWEEN 1 AND 200),
+        UNIQUE(x, y)
+      )
+    `);
     console.log("Database initialized successfully");
   } catch (error) {
     console.error("Error initializing database:", error);
@@ -98,13 +106,13 @@ class DatabaseManager {
 
     this.progressQueries = {
       saveProgress: db.prepare(`
-        INSERT OR REPLACE INTO game_progress 
+        INSERT INTO game_progress 
         (user_id, castle_data, resources, structures) 
         VALUES (?, ?, ?, ?)
       `),
 
       getProgress: db.prepare(`
-        SELECT * FROM game_progress WHERE user_id = ?
+        SELECT * FROM game_progress WHERE user_id = ? ORDER BY id DESC LIMIT 1
       `),
 
       updateProgress: db.prepare(`
@@ -132,13 +140,13 @@ class DatabaseManager {
 
     this.equipmentQueries = {
       saveEquipment: db.prepare(`
-        INSERT OR REPLACE INTO user_equipment 
+        INSERT INTO user_equipment 
         (user_id, equipped_items, gear_inventory, crafting_points) 
         VALUES (?, ?, ?, ?)
       `),
 
       getEquipment: db.prepare(`
-        SELECT * FROM user_equipment WHERE user_id = ?
+        SELECT * FROM user_equipment WHERE user_id = ? ORDER BY id DESC LIMIT 1
       `),
 
       updateEquipment: db.prepare(`
@@ -147,6 +155,41 @@ class DatabaseManager {
         WHERE user_id = ?
       `),
     };
+  }
+
+  // Allocates a unique base tile within a transaction; existing saved bases are respected.
+  ensureBase(userId, username) {
+    return db.transaction(() => {
+      const existing = db.prepare("SELECT x, y FROM base_positions WHERE user_id = ?").get(userId);
+      if (existing) return { username, ...existing };
+      const progress = this.getGameProgress(userId);
+      const old = progress && progress.castle;
+      const occupied = new Set(db.prepare("SELECT x, y FROM base_positions").all().map(p => p.x + ":" + p.y));
+      // Preserve coordinates already saved by legacy users, even before migration.
+      for (const row of db.prepare("SELECT castle_data FROM game_progress ORDER BY id DESC").all()) {
+        try {
+          const castle = JSON.parse(row.castle_data);
+          if (Number.isInteger(castle.x) && Number.isInteger(castle.y)) occupied.add(castle.x + ":" + castle.y);
+        } catch (_) {}
+      }
+      const preferred = old && Number.isInteger(old.x) && Number.isInteger(old.y) ? old : null;
+      let selected = null;
+      if (preferred && preferred.x >= 1 && preferred.x <= 200 && preferred.y >= 1 && preferred.y <= 200 &&
+          !db.prepare("SELECT 1 FROM base_positions WHERE x = ? AND y = ?").get(preferred.x, preferred.y)) {
+        selected = { x: preferred.x, y: preferred.y };
+      } else {
+        for (let i = 0; i < 40000; i++) {
+          const x = (i % 200) + 1;
+          const y = Math.floor(i / 200) + 1;
+          if (!occupied.has(x + ":" + y)) { selected = { x, y }; break; }
+        }
+      }
+      if (!selected) throw new Error("Map is full");
+      db.prepare("INSERT INTO base_positions(user_id, x, y) VALUES (?, ?, ?)").run(userId, selected.x, selected.y);
+      const castle = { username, ...selected };
+      if (!progress) this.saveGameProgress(userId, castle, { Gold: 10000, Iron: 8000, Water: 6000, Solar: 4000 }, {});
+      return castle;
+    })();
   }
 
   createUser(email, username, hashedPassword) {
@@ -187,7 +230,12 @@ class DatabaseManager {
       const resourcesJson = JSON.stringify(resources);
       const structuresJson = JSON.stringify(structures);
 
-      this.progressQueries.saveProgress.run(userId, castleJson, resourcesJson, structuresJson);
+      const existing = this.progressQueries.getProgress.get(userId);
+      if (existing) {
+        this.progressQueries.updateProgress.run(castleJson, resourcesJson, structuresJson, userId);
+      } else {
+        this.progressQueries.saveProgress.run(userId, castleJson, resourcesJson, structuresJson);
+      }
       return { success: true };
     } catch (error) {
       throw error;
@@ -233,7 +281,12 @@ class DatabaseManager {
       const gearInventoryJson = JSON.stringify(gearInventory);
       const craftingPointsJson = JSON.stringify(craftingPoints);
 
-      this.equipmentQueries.saveEquipment.run(userId, equippedItemsJson, gearInventoryJson, craftingPointsJson);
+      const existing = this.equipmentQueries.getEquipment.get(userId);
+      if (existing) {
+        this.equipmentQueries.updateEquipment.run(equippedItemsJson, gearInventoryJson, craftingPointsJson, userId);
+      } else {
+        this.equipmentQueries.saveEquipment.run(userId, equippedItemsJson, gearInventoryJson, craftingPointsJson);
+      }
       return { success: true };
     } catch (error) {
       throw error;
